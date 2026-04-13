@@ -44,11 +44,20 @@ dependencies:
   # HTTP Client
   dio: ^5.7.0
 
+  # Local storage (auth token persistence)
+  shared_preferences: ^2.3.5
+
   # Shimmer skeleton loading
   shimmer: ^3.0.0
 
   # Camera / image picking
   image_picker: ^1.1.2
+
+  # Maps & Location (OpenStreetMap – no API key needed)
+  flutter_map: ^7.0.2
+  latlong2: ^0.9.1
+  geolocator: ^13.0.2
+  url_launcher: ^6.3.1
 
 dev_dependencies:
   flutter_test:

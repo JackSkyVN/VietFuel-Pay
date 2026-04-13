@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import get_settings
 from app.core.database import engine, Base
 from app.core.exceptions import register_exception_handlers
-from app.routers import admin, customer, engine as engine_router
+from app.routers import admin, auth as auth_router, customer, engine as engine_router, stations as stations_router
 
 settings = get_settings()
 
@@ -53,8 +53,8 @@ def create_app() -> FastAPI:
     # ── CORS ──────────────────────────────────────────────────────────
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=settings.CORS_ORIGINS,
-        allow_credentials=True,
+        allow_origins=["*"],
+        allow_credentials=False,
         allow_methods=["*"],
         allow_headers=["*"],
     )
@@ -64,9 +64,11 @@ def create_app() -> FastAPI:
 
     # ── Routers ───────────────────────────────────────────────────────
     api_prefix = settings.API_V1_PREFIX
+    app.include_router(auth_router.router, prefix=api_prefix)
     app.include_router(engine_router.router, prefix=api_prefix)
     app.include_router(customer.router, prefix=api_prefix)
     app.include_router(admin.router, prefix=api_prefix)
+    app.include_router(stations_router.router, prefix=api_prefix)
 
     @app.get("/", tags=["Health"], summary="Health Check")
     async def health_check():

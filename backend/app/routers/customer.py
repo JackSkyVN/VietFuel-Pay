@@ -13,6 +13,7 @@ from app.schemas.customer import (
     OfflineQrResponse,
     PaymentMethodCreate,
     PaymentMethodResponse,
+    ProfileResponse,
     TransactionHistoryResponse,
     VehicleCreate,
     VehicleResponse,
@@ -120,3 +121,62 @@ async def get_offline_qr(
     db: AsyncSession = Depends(get_db),
 ) -> OfflineQrResponse:
     return await create_offline_qr(customer_id, db)
+
+
+# ── Development Endpoints ─────────────────────────────────────────────────────
+
+@router.get(
+    "/profile/dev",
+    response_model=ProfileResponse,
+    summary="[DEV] Fetch Customer Profile (no auth)",
+    description="Loads a customer profile, vehicles, and payment methods by phone number.",
+    tags=["Customer – Mobile App"],
+)
+async def get_profile_dev(
+    phone: str = Query(..., examples=["0901234567"], description="Customer phone number"),
+    db: AsyncSession = Depends(get_db),
+) -> ProfileResponse:
+    from sqlalchemy import select
+    from sqlalchemy.orm import selectinload
+    from app.models import Customer as CustomerModel
+    from app.core.exceptions import NotFoundException
+
+    result = await db.execute(
+        select(CustomerModel)
+        .options(
+            selectinload(CustomerModel.vehicles),
+            selectinload(CustomerModel.payment_methods)
+        )
+        .where(CustomerModel.phone == phone)
+    )
+    customer = result.scalar_one_or_none()
+    if not customer:
+        raise NotFoundException("Customer profile not found")
+    return customer
+
+
+@router.post(
+    "/vehicles/dev",
+    response_model=VehicleResponse,
+    status_code=201,
+    summary="[DEV] Register Vehicle by phone (no auth)",
+    description="Registers a new vehicle license plate to a customer's account based on phone number.",
+    tags=["Customer – Mobile App"],
+)
+async def register_vehicle_dev(
+    payload: VehicleCreate,
+    phone: str = Query(..., examples=["0901234567"]),
+    db: AsyncSession = Depends(get_db),
+) -> VehicleResponse:
+    from sqlalchemy import select
+    from app.models import Customer as CustomerModel
+    from app.core.exceptions import NotFoundException
+
+    result = await db.execute(
+        select(CustomerModel).where(CustomerModel.phone == phone)
+    )
+    customer = result.scalar_one_or_none()
+    if not customer:
+        raise NotFoundException("Customer profile not found")
+        
+    return await add_vehicle(customer.id, payload, db)

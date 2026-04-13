@@ -137,3 +137,16 @@ class OfflineQrToken(Base):
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     is_used: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc)
+
+
+class GasStation(Base):
+    """Gas station locations displayed on the customer map."""
+    __tablename__ = "gas_stations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name: Mapped[str] = mapped_column(String(200))
+    address: Mapped[str] = mapped_column(String(512))
+    latitude: Mapped[float] = mapped_column(Float)
+    longitude: Mapped[float] = mapped_column(Float)
+    status: Mapped[str] = mapped_column(String(20), default="OPEN")  # OPEN | CLOSED | BUSY
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc)

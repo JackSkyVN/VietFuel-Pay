@@ -1,23 +1,30 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_strings.dart';
+import '../../../../core/network/api_client.dart';
 import '../../../../shared/widgets/animated_button.dart';
+import '../../data/datasources/auth_remote_datasource.dart';
+import '../providers/auth_providers.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _phoneCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   bool _obscurePass = true;
   bool _isLoading = false;
+  String? _errorMessage;
 
   @override
   void dispose() {
@@ -27,13 +34,56 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _signIn() async {
+    // Clear previous error and validate form fields
+    setState(() => _errorMessage = null);
     if (!_formKey.currentState!.validate()) return;
+
     setState(() => _isLoading = true);
-    await Future.delayed(const Duration(seconds: 2));
-    if (mounted) {
-      Navigator.of(context).pushReplacementNamed('/dashboard');
+
+    try {
+      final dio = ref.read(dioProvider);
+      final ds = AuthRemoteDataSource(dio);
+
+      // The phone field shows digits only; prefix with '0' to match DB format.
+      // Users see "+84" hint but type local digits, e.g. "901234567".
+      // We normalise: if they omit the leading 0 we add it.
+      String phone = _phoneCtrl.text.trim();
+      if (phone.startsWith('84')) {
+        phone = '0${phone.substring(2)}';
+      } else if (!phone.startsWith('0')) {
+        phone = '0$phone';
+      }
+
+      final data = await ds.login(phone: phone, password: _passCtrl.text);
+
+      // Store session globally so all screens can read it
+      await ref.read(authSessionProvider.notifier).login(
+            AuthSession(
+              accessToken: data['access_token'] as String,
+              customerId: data['customer_id'] as String,
+              fullName: data['full_name'] as String,
+              phone: data['phone'] as String,
+            ),
+          );
+
+      if (mounted) {
+        Navigator.of(context).pushReplacementNamed('/dashboard');
+      }
+    } on DioException catch (e) {
+      final statusCode = e.response?.statusCode;
+      if (statusCode == 401) {
+        setState(() =>
+            _errorMessage = 'Incorrect phone number or password. Please try again.');
+      } else if (statusCode == 403) {
+        setState(() => _errorMessage = 'Your account has been disabled. Contact support.');
+      } else {
+        setState(() => _errorMessage = 'Network error. Please check your connection.');
+      }
+    } catch (_) {
+      setState(() => _errorMessage = 'An unexpected error occurred. Please try again.');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
-    setState(() => _isLoading = false);
   }
 
   @override
@@ -176,6 +226,39 @@ class _LoginScreenState extends State<LoginScreen> {
                             validator: (v) =>
                                 (v == null || v.length < 6) ? 'Password too short' : null,
                           ),
+
+                          // ── Error banner ────────────────────────────────
+                          if (_errorMessage != null) ...[
+                            const SizedBox(height: 16),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 12),
+                              decoration: BoxDecoration(
+                                color: AppColors.primaryRed.withOpacity(0.08),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                    color: AppColors.primaryRed.withOpacity(0.3)),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.error_outline_rounded,
+                                      color: AppColors.primaryRed, size: 18),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Text(
+                                      _errorMessage!,
+                                      style: const TextStyle(
+                                        color: AppColors.primaryRed,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ).animate().fadeIn(duration: 300.ms).shake(hz: 2),
+                          ],
+
                           const SizedBox(height: 10),
 
                           Align(

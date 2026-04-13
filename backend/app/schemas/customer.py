@@ -90,3 +90,17 @@ class OfflineQrResponse(BaseModel):
     qr_data: str          # JWT or signed payload to embed in QR image
     expires_at: datetime
     qr_image_base64: str  # Base64-encoded PNG QR image
+
+
+# ── Profile ───────────────────────────────────────────────────────────────────
+
+class ProfileResponse(BaseModel):
+    id: uuid.UUID
+    full_name: str
+    phone: str
+    email: str | None
+    created_at: datetime
+    vehicles: list[VehicleResponse] = []
+    payment_methods: list[PaymentMethodResponse] = []
+
+    model_config = {"from_attributes": True}

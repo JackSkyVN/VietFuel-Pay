@@ -7,35 +7,73 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_routes.dart';
 
-class ProfileScreen extends StatelessWidget {
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../auth/presentation/providers/auth_providers.dart';
+import '../providers/profile_providers.dart';
+import '../../data/models/profile_model.dart';
+
+class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final asyncProfile = ref.watch(profileProvider);
+
     return Scaffold(
       backgroundColor: AppColors.lightGray,
-      body: CustomScrollView(
-        physics: const BouncingScrollPhysics(),
-        slivers: [
-          _buildHeroHeader(context),
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(20, 24, 20, 100),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                _buildVehiclesSection(context),
-                const SizedBox(height: 32),
-                _buildPaymentMethodsSection(context),
-                const SizedBox(height: 32),
-                _buildSettingsRow(context),
-              ]),
+      body: asyncProfile.when(
+        loading: () => _buildLoadingState(),
+        error: (e, _) => _buildErrorState(e.toString(), () => ref.refresh(profileProvider)),
+        data: (profile) => CustomScrollView(
+          physics: const BouncingScrollPhysics(),
+          slivers: [
+            _buildHeroHeader(context, profile),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 100),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  _buildVehiclesSection(context, profile.vehicles, ref),
+                  const SizedBox(height: 32),
+                  _buildPaymentMethodsSection(context, profile.paymentMethods),
+                  const SizedBox(height: 32),
+                  _buildSettingsRow(context),
+                ]),
+              ),
             ),
-          ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoadingState() {
+    return const Center(child: CircularProgressIndicator(color: AppColors.primaryRed));
+  }
+
+  Widget _buildErrorState(String error, VoidCallback onRetry) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.error_outline_rounded, color: AppColors.primaryRed, size: 48),
+          const SizedBox(height: 16),
+          Text(error, style: const TextStyle(color: AppColors.charcoal), textAlign: TextAlign.center),
+          const SizedBox(height: 16),
+          TextButton(onPressed: onRetry, child: const Text('Retry')),
         ],
       ),
     );
   }
 
-  Widget _buildHeroHeader(BuildContext context) {
+  Widget _buildHeroHeader(BuildContext context, ProfileModel profile) {
+    // Generate initials (e.g., "Nguyễn Văn A" -> "NA")
+    final parts = profile.fullName.split(' ').where((s) => s.isNotEmpty).toList();
+    final initials = parts.length > 1 
+      ? '${parts.first[0]}${parts.last[0]}'.toUpperCase()
+      : (parts.isNotEmpty ? parts.first[0].toUpperCase() : '?');
+
+    final joinedYear = profile.createdAt.year;
+
     return SliverAppBar(
       expandedHeight: 260,
       pinned: true,
@@ -69,9 +107,9 @@ class ProfileScreen extends StatelessWidget {
                       shape: BoxShape.circle,
                     ),
                     alignment: Alignment.center,
-                    child: const Text(
-                      'TN',
-                      style: TextStyle(
+                    child: Text(
+                      initials,
+                      style: const TextStyle(
                         color: AppColors.primaryRed,
                         fontSize: 32,
                         fontWeight: FontWeight.w900,
@@ -80,9 +118,9 @@ class ProfileScreen extends StatelessWidget {
                   ),
                 ).animate().scale(begin: const Offset(0.8, 0.8), duration: 500.ms, curve: Curves.easeOutBack),
                 const SizedBox(height: 16),
-                const Text(
-                  'Thanh Nguyễn',
-                  style: TextStyle(
+                Text(
+                  profile.fullName,
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 24,
                     fontWeight: FontWeight.w800,
@@ -90,7 +128,7 @@ class ProfileScreen extends StatelessWidget {
                 ).animate().fadeIn(delay: 100.ms, duration: 400.ms).slideY(begin: 0.1),
                 const SizedBox(height: 6),
                 Text(
-                  '090 123 4567  ·  Joined 2026',
+                  '${_formatPhone(profile.phone)}  ·  Joined $joinedYear',
                   style: TextStyle(
                     color: Colors.white.withOpacity(0.75),
                     fontSize: 14,
@@ -105,7 +143,14 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildVehiclesSection(BuildContext context) {
+  String _formatPhone(String phone) {
+    if (phone.length == 10) {
+      return '${phone.substring(0,3)} ${phone.substring(3,6)} ${phone.substring(6)}';
+    }
+    return phone;
+  }
+
+  Widget _buildVehiclesSection(BuildContext context, List<VehicleModel> vehicles, WidgetRef ref) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -118,23 +163,49 @@ class ProfileScreen extends StatelessWidget {
             physics: const BouncingScrollPhysics(),
             clipBehavior: Clip.none,
             children: [
-              _VehicleCard(
-                plate: '51G-123.45',
-                desc: 'Honda Air Blade 160',
-                isPrimary: true,
-              ).animate().fadeIn(delay: 100.ms, duration: 400.ms).slideX(begin: 0.1),
-              const SizedBox(width: 14),
+              ...vehicles.map((v) => Padding(
+                padding: const EdgeInsets.only(right: 14),
+                child: _VehicleCard(
+                  plate: v.licensePlate,
+                  desc: [v.make, v.model].where((e) => e != null && e.isNotEmpty).join(' ') 
+                        .padRight(1, 'Vehicle Profile'), // default text if empty
+                  isPrimary: v.isPrimary,
+                ).animate().fadeIn(duration: 400.ms).slideX(begin: 0.1),
+              )),
               // add new button
               GestureDetector(
-                onTap: () {
-                  Navigator.of(context).pushNamed(AppRoutes.plateCapture)
-                      .then((val) {
-                    if (val != null) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Added new vehicle: $val')),
-                      );
+                onTap: () async {
+                  final val = await Navigator.of(context).pushNamed(AppRoutes.plateCapture);
+                  if (val != null && val is String && context.mounted) {
+                    try {
+                      // Call backend to save
+                      final ds = ref.read(profileDataSourceProvider);
+                      final phone = ref.read(sessionPhoneProvider);
+                      if (phone == null) return;
+                      await ds.addVehicle(phone, val);
+                      
+                      // Trigger profile UI reload upon success
+                      ref.invalidate(profileProvider);
+                      
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Successfully added vehicle: $val'),
+                            backgroundColor: AppColors.success,
+                          ),
+                        );
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Failed to add vehicle: $e'),
+                            backgroundColor: AppColors.primaryRed,
+                          ),
+                        );
+                      }
                     }
-                  });
+                  }
                 },
                 child: Container(
                   width: 120,
@@ -167,7 +238,7 @@ class ProfileScreen extends StatelessWidget {
                     ],
                   ),
                 ),
-              ).animate().fadeIn(delay: 200.ms, duration: 400.ms).slideX(begin: 0.1),
+              ).animate().fadeIn(duration: 400.ms).slideX(begin: 0.1),
             ],
           ),
         ),
@@ -175,53 +246,67 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildPaymentMethodsSection(BuildContext context) {
+  Widget _buildPaymentMethodsSection(BuildContext context, List<PaymentMethodModel> methods) {
+    if (methods.isEmpty) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _SectionHeader(label: 'Payment Methods', actionLabel: 'Manage', onAction: () {}),
+          const SizedBox(height: 16),
+          const Text('No payment methods linked.', style: TextStyle(color: AppColors.mediumGray)),
+        ],
+      );
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _SectionHeader(label: 'Payment Methods', actionLabel: 'Manage', onAction: () {}),
         const SizedBox(height: 16),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: AppColors.softShadow,
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 48,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1A1F71),
-                  borderRadius: BorderRadius.circular(6),
+        ...methods.map((pm) => Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: AppColors.softShadow,
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: pm.provider.toUpperCase() == 'VISA' ? const Color(0xFF1A1F71) : AppColors.primaryRed,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(pm.provider, style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w900, fontStyle: FontStyle.italic)),
                 ),
-                alignment: Alignment.center,
-                child: const Text('VISA', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w900, fontStyle: FontStyle.italic)),
-              ),
-              const SizedBox(width: 16),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('ViettelPay Card', style: TextStyle(color: AppColors.charcoal, fontWeight: FontWeight.w700, fontSize: 14)),
-                    SizedBox(height: 4),
-                    Text('**** **** **** 4242', style: TextStyle(color: AppColors.mediumGray, fontSize: 12, letterSpacing: 1)),
-                  ],
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Linked Card', style: const TextStyle(color: AppColors.charcoal, fontWeight: FontWeight.w700, fontSize: 14)),
+                      const SizedBox(height: 4),
+                      Text(pm.maskedAccount, style: const TextStyle(color: AppColors.mediumGray, fontSize: 12, letterSpacing: 1)),
+                    ],
+                  ),
                 ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppColors.success.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Text('DEFAULT', style: TextStyle(color: AppColors.success, fontSize: 10, fontWeight: FontWeight.w800)),
-              )
-            ],
-          ),
-        ).animate().fadeIn(delay: 300.ms, duration: 400.ms).slideY(begin: 0.1),
+                if (pm.isDefault)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.success.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Text('DEFAULT', style: TextStyle(color: AppColors.success, fontSize: 10, fontWeight: FontWeight.w800)),
+                  )
+              ],
+            ),
+          ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1),
+        )),
       ],
     );
   }
@@ -261,7 +346,7 @@ class ProfileScreen extends StatelessWidget {
           ],
         ),
       ),
-    ).animate().fadeIn(delay: 400.ms, duration: 400.ms).slideY(begin: 0.1);
+    ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1);
   }
 }
 
@@ -348,7 +433,7 @@ class _VehicleCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            desc,
+            desc.isEmpty ? 'Vehicle Profile' : desc,
             style: const TextStyle(
               color: AppColors.mediumGray,
               fontSize: 12,
@@ -362,3 +447,4 @@ class _VehicleCard extends StatelessWidget {
     );
   }
 }
+

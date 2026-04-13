@@ -6,6 +6,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../shared/widgets/animated_button.dart';
 import '../../../../shared/widgets/glass_card.dart';
+import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../domain/entities/transaction.dart';
 import '../providers/transaction_providers.dart';
 
@@ -50,19 +51,19 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 16),
                     _buildBalanceSection(),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 16),
                     _buildQuickActions(),
-                    const SizedBox(height: 28),
+                    const SizedBox(height: 20),
                     _buildLinkedCardsHeader(),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 10),
                     _buildPaymentCardsScroll(),
-                    const SizedBox(height: 28),
+                    const SizedBox(height: 20),
                     _buildTransactionHeader(),
-                    const SizedBox(height: 14),
-                    // ── Live transaction list ──────────────────────────────
-                    _LiveTransactionList(),
+                    const SizedBox(height: 10),
+                    // ── Live transaction list (top 3) ──────────────────────
+                    const _LiveTransactionList(),
                   ]),
                 ),
               ),
@@ -81,8 +82,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }
 
   Widget _buildParallaxHeader() {
+    // Read the logged-in user's name from the auth session
+    final session = ref.watch(currentSessionProvider);
+    final fullName = session?.fullName ?? '';
+    final parts = fullName.split(' ').where((s) => s.isNotEmpty).toList();
+    final initials = parts.length > 1
+        ? '${parts.first[0]}${parts.last[0]}'.toUpperCase()
+        : (parts.isNotEmpty ? parts.first[0].toUpperCase() : '?');
+
     return SliverAppBar(
-      expandedHeight: 220,
+      expandedHeight: 160,
       floating: false,
       pinned: true,
       backgroundColor: Colors.transparent,
@@ -108,9 +117,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       CircleAvatar(
                         radius: 22,
                         backgroundColor: Colors.white.withOpacity(0.2),
-                        child: const Text(
-                          'TN',
-                          style: TextStyle(
+                        child: Text(
+                          initials,
+                          style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.w800,
                             fontSize: 15,
@@ -136,7 +145,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    '${AppStrings.dashboardGreeting}, Thanh Nguyễn 👋',
+                    '${AppStrings.dashboardGreeting}, $fullName 👋',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 20,
@@ -309,13 +318,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   Widget _buildPaymentCardsScroll() {
     return SizedBox(
-      height: 170,
+      height: 128,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
         clipBehavior: Clip.none,
         itemCount: 3,
-        separatorBuilder: (_, _) => const SizedBox(width: 14),
+        separatorBuilder: (_, __) => const SizedBox(width: 12),
         itemBuilder: (ctx, i) => _PaymentCard(index: i)
             .animate()
             .fadeIn(delay: (100 * i).ms, duration: 500.ms)
@@ -336,9 +345,31 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             fontWeight: FontWeight.w700,
           ),
         ),
-        TextButton(
-          onPressed: () => ref.refresh(transactionHistoryProvider),
-          child: const Text('Refresh'),
+        Row(
+          children: [
+            GestureDetector(
+              onTap: () => ref.refresh(transactionHistoryProvider),
+              child: const Icon(Icons.refresh_rounded,
+                  color: AppColors.mediumGray, size: 18),
+            ),
+            const SizedBox(width: 8),
+            TextButton(
+              onPressed: () {},
+              style: TextButton.styleFrom(
+                padding: EdgeInsets.zero,
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: const Text(
+                'See all',
+                style: TextStyle(
+                  color: AppColors.primaryRed,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -364,13 +395,14 @@ class _LiveTransactionList extends ConsumerWidget {
         if (transactions.isEmpty) {
           return _EmptyTransactionPanel();
         }
+        final visible = transactions.take(3).toList();
         return Column(
-          children: transactions
+          children: visible
               .asMap()
               .entries
               .map(
                 (e) => Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.only(bottom: 10),
                   child: _TransactionCard(transaction: e.value)
                       .animate()
                       .fadeIn(delay: (80 * e.key).ms, duration: 400.ms)
@@ -723,7 +755,7 @@ class _QuickActionTile extends StatelessWidget {
   }
 }
 
-class _PaymentCard extends StatelessWidget {
+class _PaymentCard extends ConsumerWidget {
   final int index;
 
   static const List<List<Color>> _palettes = [
@@ -738,25 +770,27 @@ class _PaymentCard extends StatelessWidget {
   const _PaymentCard({required this.index});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = _palettes[index % _palettes.length];
     final network = _networks[index % _networks.length];
     final last4 = _lastFours[index % _lastFours.length];
+    final session = ref.watch(currentSessionProvider);
+    final cardName = (session?.fullName ?? '').toUpperCase();
 
     return Container(
-      width: 240,
+      width: 195,
       decoration: BoxDecoration(
         gradient: LinearGradient(colors: colors, begin: Alignment.topLeft, end: Alignment.bottomRight),
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: colors[0].withOpacity(0.4),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
+            color: colors[0].withOpacity(0.35),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -767,42 +801,45 @@ class _PaymentCard extends StatelessWidget {
                 network,
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 13,
+                  fontSize: 11,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 2,
                 ),
               ),
-              const Icon(Icons.wifi_rounded, color: Colors.white54, size: 20),
+              const Icon(Icons.wifi_rounded, color: Colors.white54, size: 16),
             ],
           ),
           const Spacer(),
           Text(
-            '•••• •••• •••• $last4',
+            '•••• $last4',
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 16,
+              fontSize: 14,
               fontWeight: FontWeight.w600,
               letterSpacing: 2,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'THANH NGUYEN',
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.75),
-                  fontSize: 11,
-                  letterSpacing: 1,
-                  fontWeight: FontWeight.w600,
+              Expanded(
+                child: Text(
+                  cardName,
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.75),
+                    fontSize: 10,
+                    letterSpacing: 0.8,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
               Text(
                 '12/27',
                 style: TextStyle(
                   color: Colors.white.withOpacity(0.75),
-                  fontSize: 11,
+                  fontSize: 10,
                   fontWeight: FontWeight.w600,
                 ),
               ),
