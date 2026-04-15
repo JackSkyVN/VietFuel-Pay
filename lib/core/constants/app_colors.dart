@@ -47,14 +47,14 @@ abstract class AppColors {
   );
 
   // ── Glassmorphism ─────────────────────────────────────────────────────────
-  static Color glassWhite = Colors.white.withOpacity(0.18);
-  static Color glassBorder = Colors.white.withOpacity(0.35);
-  static Color glassRed = primaryRed.withOpacity(0.15);
+  static Color glassWhite = Colors.white.withValues(alpha: 0.18);
+  static Color glassBorder = Colors.white.withValues(alpha: 0.35);
+  static Color glassRed = primaryRed.withValues(alpha: 0.15);
 
   // ── Shadows ───────────────────────────────────────────────────────────────
   static List<BoxShadow> redGlow = [
     BoxShadow(
-      color: primaryRed.withOpacity(0.45),
+      color: primaryRed.withValues(alpha: 0.45),
       blurRadius: 24,
       spreadRadius: 2,
       offset: const Offset(0, 8),
@@ -63,7 +63,7 @@ abstract class AppColors {
 
   static List<BoxShadow> softShadow = [
     BoxShadow(
-      color: Colors.black.withOpacity(0.08),
+      color: Colors.black.withValues(alpha: 0.08),
       blurRadius: 20,
       spreadRadius: 0,
       offset: const Offset(0, 4),
@@ -72,13 +72,13 @@ abstract class AppColors {
 
   static List<BoxShadow> cardShadow = [
     BoxShadow(
-      color: Colors.black.withOpacity(0.12),
+      color: Colors.black.withValues(alpha: 0.12),
       blurRadius: 32,
       spreadRadius: 0,
       offset: const Offset(0, 8),
     ),
     BoxShadow(
-      color: primaryRed.withOpacity(0.06),
+      color: primaryRed.withValues(alpha: 0.06),
       blurRadius: 20,
       spreadRadius: 0,
       offset: const Offset(0, 2),

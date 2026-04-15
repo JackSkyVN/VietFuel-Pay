@@ -39,7 +39,7 @@ class SettingsScreen extends StatelessWidget {
               _SettingsTile(
                 icon: Icons.fingerprint_rounded, 
                 title: 'Biometric Login', 
-                trailing: CupertinoSwitch(value: true, activeColor: AppColors.success, onChanged: (v) {}),
+                trailing: CupertinoSwitch(value: true, activeTrackColor: AppColors.success, onChanged: (v) {}),
               ),
             ],
           ),
@@ -51,12 +51,12 @@ class SettingsScreen extends StatelessWidget {
               _SettingsTile(
                 icon: Icons.notifications_active_outlined, 
                 title: 'Payment Alerts', 
-                trailing: CupertinoSwitch(value: true, activeColor: AppColors.success, onChanged: (v) {}),
+                trailing: CupertinoSwitch(value: true, activeTrackColor: AppColors.success, onChanged: (v) {}),
               ),
               _SettingsTile(
                 icon: Icons.map_outlined, 
                 title: 'Nearby Station Prompts', 
-                trailing: CupertinoSwitch(value: false, activeColor: AppColors.success, onChanged: (v) {}),
+                trailing: CupertinoSwitch(value: false, activeTrackColor: AppColors.success, onChanged: (v) {}),
               ),
             ],
           ),

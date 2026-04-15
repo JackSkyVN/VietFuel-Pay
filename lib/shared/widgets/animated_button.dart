@@ -103,7 +103,7 @@ class _AnimatedPrimaryButtonState extends State<AnimatedPrimaryButton>
               boxShadow: active
                   ? [
                       BoxShadow(
-                        color: AppColors.primaryRed.withOpacity(0.40),
+                        color: AppColors.primaryRed.withValues(alpha: 0.40),
                         blurRadius: 18,
                         spreadRadius: 0,
                         offset: const Offset(0, 6),
@@ -237,7 +237,7 @@ class _AnimatedOutlineButtonState extends State<AnimatedOutlineButton>
       ),
     ).animate().shimmer(
           duration: const Duration(seconds: 3),
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
         );
   }
 }

@@ -202,7 +202,7 @@ class _PlateScannerScreenState extends ConsumerState<PlateScannerScreen>
         Center(
           child: AnimatedBuilder(
             animation: _pulseAnim,
-            builder: (_, __) {
+            builder: (_, _) {
               return CustomPaint(
                 painter: _ScanFramePainter(
                     opacity: _pulseAnim.value, color: AppColors.primaryRed),
@@ -215,14 +215,14 @@ class _PlateScannerScreenState extends ConsumerState<PlateScannerScreen>
                     children: [
                       Icon(
                         Icons.document_scanner_outlined,
-                        color: Colors.white.withOpacity(0.35),
+                        color: Colors.white.withValues(alpha: 0.35),
                         size: 40,
                       ),
                       const SizedBox(height: 8),
                       Text(
                         'Position plate here',
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.45),
+                          color: Colors.white.withValues(alpha: 0.45),
                           fontSize: 13,
                         ),
                       ),
@@ -238,7 +238,7 @@ class _PlateScannerScreenState extends ConsumerState<PlateScannerScreen>
           'Take a clear photo of your\nlicense plate or vehicle',
           textAlign: TextAlign.center,
           style: TextStyle(
-            color: Colors.white.withOpacity(0.65),
+            color: Colors.white.withValues(alpha: 0.65),
             fontSize: 15,
             height: 1.5,
           ),
@@ -287,7 +287,7 @@ class _PlateScannerScreenState extends ConsumerState<PlateScannerScreen>
         const SizedBox(height: 24),
         Text(
           'Image selected — ready to scan',
-          style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 14),
+          style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 14),
         ),
         const Spacer(),
         Padding(
@@ -336,7 +336,7 @@ class _PlateScannerScreenState extends ConsumerState<PlateScannerScreen>
                 borderRadius: BorderRadius.circular(20),
                 child: AnimatedBuilder(
                   animation: _scanLineAnim,
-                  builder: (_, __) {
+                  builder: (_, _) {
                     return CustomPaint(
                       painter: _ScanLinePainter(_scanLineAnim.value),
                       child: const SizedBox(height: 200, width: double.infinity),
@@ -360,7 +360,7 @@ class _PlateScannerScreenState extends ConsumerState<PlateScannerScreen>
         const SizedBox(height: 8),
         Text(
           'Powered by Smart AI Vision',
-          style: TextStyle(color: Colors.white.withOpacity(0.45), fontSize: 12),
+          style: TextStyle(color: Colors.white.withValues(alpha: 0.45), fontSize: 12),
         ),
       ],
     );
@@ -387,7 +387,7 @@ class _PlateScannerScreenState extends ConsumerState<PlateScannerScreen>
               ),
               boxShadow: [
                 BoxShadow(
-                    color: AppColors.success.withOpacity(0.4),
+                    color: AppColors.success.withValues(alpha: 0.4),
                     blurRadius: 24,
                     spreadRadius: 4),
               ],
@@ -417,10 +417,10 @@ class _PlateScannerScreenState extends ConsumerState<PlateScannerScreen>
               ),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                  color: AppColors.primaryRed.withOpacity(0.4), width: 1.5),
+                  color: AppColors.primaryRed.withValues(alpha: 0.4), width: 1.5),
               boxShadow: [
                 BoxShadow(
-                    color: AppColors.primaryRed.withOpacity(0.2),
+                    color: AppColors.primaryRed.withValues(alpha: 0.2),
                     blurRadius: 30,
                     spreadRadius: 2),
               ],
@@ -430,7 +430,7 @@ class _PlateScannerScreenState extends ConsumerState<PlateScannerScreen>
                 Text(
                   'DETECTED PLATE',
                   style: TextStyle(
-                      color: Colors.white.withOpacity(0.5),
+                      color: Colors.white.withValues(alpha: 0.5),
                       fontSize: 11,
                       letterSpacing: 2,
                       fontWeight: FontWeight.w600),
@@ -454,7 +454,7 @@ class _PlateScannerScreenState extends ConsumerState<PlateScannerScreen>
                       children: [
                         Text('Confidence',
                             style: TextStyle(
-                                color: Colors.white.withOpacity(0.5),
+                                color: Colors.white.withValues(alpha: 0.5),
                                 fontSize: 12)),
                         Text('$pct%',
                             style: const TextStyle(
@@ -468,7 +468,7 @@ class _PlateScannerScreenState extends ConsumerState<PlateScannerScreen>
                       borderRadius: BorderRadius.circular(4),
                       child: LinearProgressIndicator(
                         value: _confidence,
-                        backgroundColor: Colors.white.withOpacity(0.1),
+                        backgroundColor: Colors.white.withValues(alpha: 0.1),
                         valueColor: AlwaysStoppedAnimation<Color>(
                             AppColors.success),
                         minHeight: 6,
@@ -482,7 +482,7 @@ class _PlateScannerScreenState extends ConsumerState<PlateScannerScreen>
                               borderRadius: BorderRadius.circular(4),
                               child: LinearProgressIndicator(
                                 value: _confidence * v,
-                                backgroundColor: Colors.white.withOpacity(0.1),
+                                backgroundColor: Colors.white.withValues(alpha: 0.1),
                                 valueColor: AlwaysStoppedAnimation<Color>(
                                     AppColors.success),
                                 minHeight: 6,
@@ -502,16 +502,16 @@ class _PlateScannerScreenState extends ConsumerState<PlateScannerScreen>
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.06),
+              color: Colors.white.withValues(alpha: 0.06),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white.withOpacity(0.1)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
             ),
             child: Row(
               children: [
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: AppColors.info.withOpacity(0.15),
+                    color: AppColors.info.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(Icons.directions_car_rounded,
@@ -529,7 +529,7 @@ class _PlateScannerScreenState extends ConsumerState<PlateScannerScreen>
                     const SizedBox(height: 2),
                     Text('Matched to your profile',
                         style: TextStyle(
-                            color: Colors.white.withOpacity(0.5),
+                            color: Colors.white.withValues(alpha: 0.5),
                             fontSize: 12)),
                   ],
                 ),
@@ -573,7 +573,7 @@ class _PlateScannerScreenState extends ConsumerState<PlateScannerScreen>
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: AppColors.primaryRed.withOpacity(0.15),
+                color: AppColors.primaryRed.withValues(alpha: 0.15),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.error_outline_rounded,
@@ -608,7 +608,7 @@ class _ScanFramePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = color.withOpacity(opacity)
+      ..color = color.withValues(alpha: opacity)
       ..strokeWidth = 3
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
@@ -653,9 +653,9 @@ class _ScanLinePainter extends CustomPainter {
     final y = size.height * progress;
     final gradient = LinearGradient(
       colors: [
-        AppColors.primaryRed.withOpacity(0),
-        AppColors.primaryRed.withOpacity(0.85),
-        AppColors.primaryRed.withOpacity(0),
+        AppColors.primaryRed.withValues(alpha: 0),
+        AppColors.primaryRed.withValues(alpha: 0.85),
+        AppColors.primaryRed.withValues(alpha: 0),
       ],
     );
     final rect = Rect.fromLTWH(0, y - 20, size.width, 40);
@@ -734,9 +734,9 @@ class _OutlineButton extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 15),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.07),
+          color: Colors.white.withValues(alpha: 0.07),
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: Colors.white.withOpacity(0.2)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,

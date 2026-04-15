@@ -97,7 +97,7 @@ class ProfileScreen extends ConsumerWidget {
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white.withOpacity(0.5), width: 2),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.5), width: 2),
                   ),
                   child: Container(
                     width: 80,
@@ -130,7 +130,7 @@ class ProfileScreen extends ConsumerWidget {
                 Text(
                   '${_formatPhone(profile.phone)}  ·  Joined $joinedYear',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.75),
+                    color: Colors.white.withValues(alpha: 0.75),
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                   ),
@@ -210,9 +210,9 @@ class ProfileScreen extends ConsumerWidget {
                 child: Container(
                   width: 120,
                   decoration: BoxDecoration(
-                    color: AppColors.primaryRed.withOpacity(0.08),
+                    color: AppColors.primaryRed.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: AppColors.primaryRed.withOpacity(0.2)),
+                    border: Border.all(color: AppColors.primaryRed.withValues(alpha: 0.2)),
                   ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -298,7 +298,7 @@ class ProfileScreen extends ConsumerWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: AppColors.success.withOpacity(0.12),
+                      color: AppColors.success.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Text('DEFAULT', style: TextStyle(color: AppColors.success, fontSize: 10, fontWeight: FontWeight.w800)),
@@ -326,7 +326,7 @@ class ProfileScreen extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: AppColors.charcoal.withOpacity(0.05),
+                color: AppColors.charcoal.withValues(alpha: 0.05),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.settings_rounded, color: AppColors.charcoal, size: 22),
@@ -405,7 +405,7 @@ class _VehicleCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: AppColors.info.withOpacity(0.12),
+                  color: AppColors.info.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(Icons.directions_car_rounded, color: AppColors.info, size: 20),
@@ -414,7 +414,7 @@ class _VehicleCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                   decoration: BoxDecoration(
-                    color: AppColors.primaryRed.withOpacity(0.12),
+                    color: AppColors.primaryRed.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Text('PRIMARY', style: TextStyle(color: AppColors.primaryRed, fontSize: 9, fontWeight: FontWeight.w800)),

@@ -48,7 +48,7 @@ class PaymentSuccessScreen extends StatelessWidget {
               Text(
                 'Your transaction has been processed.',
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.65),
+                  color: Colors.white.withValues(alpha: 0.65),
                   fontSize: 14,
                 ),
               ).animate().fadeIn(delay: 750.ms, duration: 500.ms),
@@ -97,7 +97,7 @@ class PaymentSuccessScreen extends StatelessWidget {
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.success.withOpacity(0.35),
+                  color: AppColors.success.withValues(alpha: 0.35),
                   blurRadius: 50,
                   spreadRadius: 10,
                 ),
@@ -136,9 +136,9 @@ class PaymentSuccessScreen extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.07),
+        color: Colors.white.withValues(alpha: 0.07),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withOpacity(0.12)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
       ),
       child: Column(
         children: [
@@ -146,7 +146,7 @@ class PaymentSuccessScreen extends StatelessWidget {
           const SizedBox(height: 16),
           _ReceiptRow(label: AppStrings.fuelAmount, value: '${litersFueled}L'),
           const SizedBox(height: 16),
-          Divider(color: Colors.white.withOpacity(0.1), thickness: 1),
+          Divider(color: Colors.white.withValues(alpha: 0.1), thickness: 1),
           const SizedBox(height: 16),
           _ReceiptRow(
             label: AppStrings.totalCost,
@@ -181,7 +181,7 @@ class _ReceiptRow extends StatelessWidget {
         Text(
           label,
           style: TextStyle(
-            color: Colors.white.withOpacity(isHighlight ? 0.9 : 0.55),
+            color: Colors.white.withValues(alpha: isHighlight ? 0.9 : 0.55),
             fontSize: isHighlight ? 15 : 13,
             fontWeight: isHighlight ? FontWeight.w600 : FontWeight.w400,
           ),

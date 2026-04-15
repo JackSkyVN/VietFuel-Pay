@@ -201,7 +201,7 @@ class AppTheme {
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: AppColors.white,
-        indicatorColor: AppColors.primaryRed.withOpacity(0.12),
+        indicatorColor: AppColors.primaryRed.withValues(alpha: 0.12),
         labelTextStyle: WidgetStatePropertyAll(
           GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500),
         ),

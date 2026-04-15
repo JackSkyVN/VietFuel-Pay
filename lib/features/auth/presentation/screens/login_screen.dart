@@ -123,9 +123,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         width: 72,
                         height: 72,
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.15),
+                          color: Colors.white.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(22),
-                          border: Border.all(color: Colors.white.withOpacity(0.3)),
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
                         ),
                         child: const Icon(
                           Icons.local_gas_station_rounded,
@@ -147,7 +147,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       Text(
                         AppStrings.appTagline,
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.75),
+                          color: Colors.white.withValues(alpha: 0.75),
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
                         ),
@@ -234,10 +234,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 16, vertical: 12),
                               decoration: BoxDecoration(
-                                color: AppColors.primaryRed.withOpacity(0.08),
+                                color: AppColors.primaryRed.withValues(alpha: 0.08),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                    color: AppColors.primaryRed.withOpacity(0.3)),
+                                    color: AppColors.primaryRed.withValues(alpha: 0.3)),
                               ),
                               child: Row(
                                 children: [

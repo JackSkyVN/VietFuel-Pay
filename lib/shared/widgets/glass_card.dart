@@ -81,8 +81,8 @@ class DarkGlassCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GlassCard(
-      glassColor: Colors.black.withOpacity(0.25),
-      borderColor: Colors.white.withOpacity(0.15),
+      glassColor: Colors.black.withValues(alpha: 0.25),
+      borderColor: Colors.white.withValues(alpha: 0.15),
       blur: 16,
       padding: padding,
       borderRadius: borderRadius,

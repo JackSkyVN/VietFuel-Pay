@@ -85,7 +85,7 @@ class _StationMapScreenState extends ConsumerState<StationMapScreen> {
         perm = await Geolocator.requestPermission();
       }
       if (perm == LocationPermission.denied ||
-          perm == LocationPermission.deniedForever) return null;
+          perm == LocationPermission.deniedForever) { return null; }
       final p = await Geolocator.getCurrentPosition(
         locationSettings:
             const LocationSettings(accuracy: LocationAccuracy.medium),
@@ -217,9 +217,9 @@ class _StationMapScreenState extends ConsumerState<StationMapScreen> {
                     Polyline(
                       points: _routePoints,
                       strokeWidth: 5,
-                      color: AppColors.primaryRed.withOpacity(0.85),
+                      color: AppColors.primaryRed.withValues(alpha: 0.85),
                       borderStrokeWidth: 2,
-                      borderColor: Colors.white.withOpacity(0.6),
+                      borderColor: Colors.white.withValues(alpha: 0.6),
                     ),
                   ],
                 ),
@@ -239,7 +239,7 @@ class _StationMapScreenState extends ConsumerState<StationMapScreen> {
                           border: Border.all(color: Colors.white, width: 3),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.info.withOpacity(0.4),
+                              color: AppColors.info.withValues(alpha: 0.4),
                               blurRadius: 8,
                             ),
                           ],
@@ -252,7 +252,7 @@ class _StationMapScreenState extends ConsumerState<StationMapScreen> {
               // Station markers
               asyncStations.when(
                 loading: () => const MarkerLayer(markers: []),
-                error: (_, __) => const MarkerLayer(markers: []),
+                error: (_, _) => const MarkerLayer(markers: []),
                 data: (stations) => MarkerLayer(
                   markers: stations.map(_buildMarker).toList(),
                 ),
@@ -279,7 +279,7 @@ class _StationMapScreenState extends ConsumerState<StationMapScreen> {
           // ── Route loading badge ───────────────────────────────────────────
           ValueListenableBuilder<({bool loading, bool hasRoute})>(
             valueListenable: _routeNotifier,
-            builder: (_, state, __) => state.loading
+            builder: (_, state, _) => state.loading
                 ? Positioned(
                     top: 110,
                     left: 0,
@@ -375,7 +375,7 @@ class _StationMapScreenState extends ConsumerState<StationMapScreen> {
                       : null,
                   boxShadow: [
                     BoxShadow(
-                      color: statusColor.withOpacity(isSelected ? 0.6 : 0.35),
+                      color: statusColor.withValues(alpha: isSelected ? 0.6 : 0.35),
                       blurRadius: isSelected ? 14 : 8,
                       offset: const Offset(0, 3),
                     ),
@@ -579,7 +579,7 @@ class _StationBottomSheet extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 3),
                         decoration: BoxDecoration(
-                          color: statusColor.withOpacity(0.12),
+                          color: statusColor.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Row(
@@ -638,7 +638,7 @@ class _StationBottomSheet extends StatelessWidget {
           // Route status — live via ValueListenableBuilder
           ValueListenableBuilder<({bool loading, bool hasRoute})>(
             valueListenable: routeNotifier,
-            builder: (_, state, __) {
+            builder: (_, state, _) {
               if (!state.loading && !state.hasRoute) {
                 return const SizedBox(height: 10);
               }
@@ -651,7 +651,7 @@ class _StationBottomSheet extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: state.loading
                         ? AppColors.borderGray
-                        : AppColors.primaryRed.withOpacity(0.08),
+                        : AppColors.primaryRed.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
@@ -797,7 +797,7 @@ class _NavAppTile extends StatelessWidget {
         width: 44,
         height: 44,
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Icon(icon, color: color, size: 22),
@@ -884,7 +884,7 @@ class _MapHeader extends StatelessWidget {
                   width: 34,
                   height: 34,
                   decoration: BoxDecoration(
-                    color: AppColors.primaryRed.withOpacity(0.1),
+                    color: AppColors.primaryRed.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(Icons.local_gas_station_rounded,
@@ -982,7 +982,7 @@ class _MapLoadingOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.white.withOpacity(0.6),
+      color: Colors.white.withValues(alpha: 0.6),
       child: Center(
         child: Container(
           padding:
@@ -1024,7 +1024,7 @@ class _MapErrorView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: AppColors.lightGray.withOpacity(0.92),
+      color: AppColors.lightGray.withValues(alpha: 0.92),
       child: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1033,7 +1033,7 @@ class _MapErrorView extends StatelessWidget {
               width: 72,
               height: 72,
               decoration: BoxDecoration(
-                color: AppColors.primaryRed.withOpacity(0.08),
+                color: AppColors.primaryRed.withValues(alpha: 0.08),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.wifi_off_rounded,

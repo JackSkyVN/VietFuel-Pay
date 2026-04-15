@@ -101,10 +101,10 @@ class _OfflineQrScreenState extends ConsumerState<OfflineQrScreen>
               width: 42,
               height: 42,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.12),
+                color: Colors.white.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(
-                  color: Colors.white.withOpacity(0.15),
+                  color: Colors.white.withValues(alpha: 0.15),
                 ),
               ),
               child: const Icon(
@@ -145,7 +145,7 @@ class _OfflineQrScreenState extends ConsumerState<OfflineQrScreen>
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.success.withOpacity(0.6),
+                              color: AppColors.success.withValues(alpha: 0.6),
                               blurRadius: 6,
                               spreadRadius: 1,
                             )
@@ -172,10 +172,10 @@ class _OfflineQrScreenState extends ConsumerState<OfflineQrScreen>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: AppColors.warning.withOpacity(0.2),
+              color: AppColors.warning.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: AppColors.warning.withOpacity(0.5),
+                color: AppColors.warning.withValues(alpha: 0.5),
               ),
             ),
             child: Row(
@@ -275,7 +275,7 @@ class _OfflineQrScreenState extends ConsumerState<OfflineQrScreen>
                 shape: BoxShape.circle,
                 border: Border.all(
                   color:
-                      AppColors.primaryRed.withOpacity(0.12 + 0.08 * _pulseCtrl.value),
+                      AppColors.primaryRed.withValues(alpha: 0.12 + 0.08 * _pulseCtrl.value),
                   width: 1.5,
                 ),
               ),
@@ -295,7 +295,7 @@ class _OfflineQrScreenState extends ConsumerState<OfflineQrScreen>
                 shape: BoxShape.circle,
                 border: Border.all(
                   color:
-                      AppColors.primaryRed.withOpacity(0.2 + 0.1 * _pulseCtrl.value),
+                      AppColors.primaryRed.withValues(alpha: 0.2 + 0.1 * _pulseCtrl.value),
                   width: 1.5,
                 ),
               ),
@@ -311,7 +311,7 @@ class _OfflineQrScreenState extends ConsumerState<OfflineQrScreen>
             child: CustomPaint(
               size: Size(qrSize + 40, qrSize + 40),
               painter: _DashedCirclePainter(
-                color: AppColors.primaryRed.withOpacity(0.55),
+                color: AppColors.primaryRed.withValues(alpha: 0.55),
                 dashCount: 24,
                 strokeWidth: 2.5,
               ),
@@ -330,7 +330,7 @@ class _OfflineQrScreenState extends ConsumerState<OfflineQrScreen>
               boxShadow: [
                 BoxShadow(
                   color: AppColors.primaryRed
-                      .withOpacity(0.25 + 0.2 * _glowCtrl.value),
+                      .withValues(alpha: 0.25 + 0.2 * _glowCtrl.value),
                   blurRadius: 30 + 10 * _glowCtrl.value,
                   spreadRadius: 4,
                 ),
@@ -348,7 +348,7 @@ class _OfflineQrScreenState extends ConsumerState<OfflineQrScreen>
             borderRadius: BorderRadius.circular(28),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.35),
+                color: Colors.black.withValues(alpha: 0.35),
                 blurRadius: 40,
                 spreadRadius: 0,
                 offset: const Offset(0, 12),
@@ -427,9 +427,9 @@ class _OfflineQrScreenState extends ConsumerState<OfflineQrScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.07),
+        color: Colors.white.withValues(alpha: 0.07),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
       ),
       child: Column(
         children: [
@@ -443,7 +443,7 @@ class _OfflineQrScreenState extends ConsumerState<OfflineQrScreen>
                   Text(
                     AppStrings.qrExpires,
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.7),
+                      color: Colors.white.withValues(alpha: 0.7),
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
                     ),
@@ -481,7 +481,7 @@ class _OfflineQrScreenState extends ConsumerState<OfflineQrScreen>
             borderRadius: BorderRadius.circular(8),
             child: LinearProgressIndicator(
               value: qrState.progressFraction,
-              backgroundColor: Colors.white.withOpacity(0.1),
+              backgroundColor: Colors.white.withValues(alpha: 0.1),
               valueColor: AlwaysStoppedAnimation<Color>(timerColor),
               minHeight: 6,
             ),
@@ -521,14 +521,14 @@ class _OfflineQrScreenState extends ConsumerState<OfflineQrScreen>
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppColors.primaryRed.withOpacity(0.18),
-            AppColors.primaryRed.withOpacity(0.06),
+            AppColors.primaryRed.withValues(alpha: 0.18),
+            AppColors.primaryRed.withValues(alpha: 0.06),
           ],
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.primaryRed.withOpacity(0.35)),
+        border: Border.all(color: AppColors.primaryRed.withValues(alpha: 0.35)),
       ),
       child: Row(
         children: [
@@ -616,16 +616,16 @@ class _InfoChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.07),
+        color: Colors.white.withValues(alpha: 0.07),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.primaryRed.withOpacity(0.2),
+              color: AppColors.primaryRed.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(icon, color: AppColors.primaryRed, size: 18),
@@ -638,7 +638,7 @@ class _InfoChip extends StatelessWidget {
                 Text(
                   label,
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.55),
+                    color: Colors.white.withValues(alpha: 0.55),
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
                   ),

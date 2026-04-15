@@ -116,7 +116,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     children: [
                       CircleAvatar(
                         radius: 22,
-                        backgroundColor: Colors.white.withOpacity(0.2),
+                        backgroundColor: Colors.white.withValues(alpha: 0.2),
                         child: Text(
                           initials,
                           style: const TextStyle(
@@ -156,7 +156,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   Text(
                     'Ready to fuel up?',
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.75),
+                      color: Colors.white.withValues(alpha: 0.75),
                       fontSize: 14,
                     ),
                   ).animate().fadeIn(delay: 100.ms, duration: 500.ms),
@@ -173,9 +173,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     return Container(
       height: MediaQuery.of(context).padding.top + 56,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.92),
+        color: Colors.white.withValues(alpha: 0.92),
         border: Border(
-          bottom: BorderSide(color: AppColors.borderGray.withOpacity(0.5)),
+          bottom: BorderSide(color: AppColors.borderGray.withValues(alpha: 0.5)),
         ),
       ),
       child: SafeArea(
@@ -204,7 +204,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   Widget _buildBalanceSection() {
     return GlassCard(
-      glassColor: Colors.white.withOpacity(0.9),
+      glassColor: Colors.white.withValues(alpha: 0.9),
       borderColor: AppColors.borderGray,
       boxShadow: AppColors.softShadow,
       child: Row(
@@ -236,7 +236,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: AppColors.success.withOpacity(0.12),
+                    color: AppColors.success.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
@@ -324,7 +324,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         physics: const BouncingScrollPhysics(),
         clipBehavior: Clip.none,
         itemCount: 3,
-        separatorBuilder: (_, __) => const SizedBox(width: 12),
+        separatorBuilder: (_, _) => const SizedBox(width: 12),
         itemBuilder: (ctx, i) => _PaymentCard(index: i)
             .animate()
             .fadeIn(delay: (100 * i).ms, duration: 500.ms)
@@ -506,7 +506,7 @@ class _ErrorTransactionPanel extends StatelessWidget {
             width: 64,
             height: 64,
             decoration: BoxDecoration(
-              color: AppColors.primaryRed.withOpacity(0.08),
+              color: AppColors.primaryRed.withValues(alpha: 0.08),
               shape: BoxShape.circle,
             ),
             child: const Icon(
@@ -571,7 +571,7 @@ class _EmptyTransactionPanel extends StatelessWidget {
       child: Column(
         children: [
           Icon(Icons.receipt_long_rounded,
-              size: 52, color: AppColors.mediumGray.withOpacity(0.5)),
+              size: 52, color: AppColors.mediumGray.withValues(alpha: 0.5)),
           const SizedBox(height: 16),
           const Text(
             'No transactions yet',
@@ -603,7 +603,7 @@ class _TransactionCard extends StatelessWidget {
         border: Border.all(
           color: isSuccess
               ? Colors.transparent
-              : AppColors.primaryRed.withOpacity(0.2),
+              : AppColors.primaryRed.withValues(alpha: 0.2),
           width: 1,
         ),
       ),
@@ -616,8 +616,8 @@ class _TransactionCard extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  AppColors.primaryRed.withOpacity(0.15),
-                  AppColors.primaryRed.withOpacity(0.05),
+                  AppColors.primaryRed.withValues(alpha: 0.15),
+                  AppColors.primaryRed.withValues(alpha: 0.05),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -655,8 +655,8 @@ class _TransactionCard extends StatelessWidget {
                           horizontal: 7, vertical: 2),
                       decoration: BoxDecoration(
                         color: isSuccess
-                            ? AppColors.success.withOpacity(0.12)
-                            : AppColors.primaryRed.withOpacity(0.10),
+                            ? AppColors.success.withValues(alpha: 0.12)
+                            : AppColors.primaryRed.withValues(alpha: 0.10),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
@@ -735,7 +735,7 @@ class _QuickActionTile extends StatelessWidget {
             width: 60,
             height: 60,
             decoration: BoxDecoration(
-              color: action.color.withOpacity(0.12),
+              color: action.color.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(18),
             ),
             child: Icon(action.icon, color: action.color, size: 26),
@@ -784,7 +784,7 @@ class _PaymentCard extends ConsumerWidget {
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: colors[0].withOpacity(0.35),
+            color: colors[0].withValues(alpha: 0.35),
             blurRadius: 16,
             offset: const Offset(0, 6),
           ),
@@ -827,7 +827,7 @@ class _PaymentCard extends ConsumerWidget {
                 child: Text(
                   cardName,
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.75),
+                    color: Colors.white.withValues(alpha: 0.75),
                     fontSize: 10,
                     letterSpacing: 0.8,
                     fontWeight: FontWeight.w600,
@@ -838,7 +838,7 @@ class _PaymentCard extends ConsumerWidget {
               Text(
                 '12/27',
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.75),
+                  color: Colors.white.withValues(alpha: 0.75),
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
                 ),

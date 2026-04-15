@@ -83,7 +83,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               child: Text(
                 AppStrings.skip,
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.75),
+                  color: Colors.white.withValues(alpha: 0.75),
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -102,7 +102,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Colors.transparent, Colors.black.withOpacity(0.5)],
+          colors: [Colors.transparent, Colors.black.withValues(alpha: 0.5)],
         ),
       ),
       child: Column(
@@ -121,7 +121,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 decoration: BoxDecoration(
                   color: _currentPage == i
                       ? Colors.white
-                      : Colors.white.withOpacity(0.35),
+                      : Colors.white.withValues(alpha: 0.35),
                   borderRadius: BorderRadius.circular(4),
                 ),
               ),
@@ -172,9 +172,9 @@ class _OnboardingPageView extends StatelessWidget {
                 height: 150,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.12),
+                  color: Colors.white.withValues(alpha: 0.12),
                   border: Border.all(
-                    color: Colors.white.withOpacity(0.25),
+                    color: Colors.white.withValues(alpha: 0.25),
                     width: 2,
                   ),
                 ),
@@ -203,7 +203,7 @@ class _OnboardingPageView extends StatelessWidget {
                 page.body,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.80),
+                  color: Colors.white.withValues(alpha: 0.80),
                   fontSize: 16,
                   height: 1.6,
                 ),

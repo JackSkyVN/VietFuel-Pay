@@ -183,7 +183,7 @@ class _TransactionHistoryScreenState
                   Text(
                     'All your fuel transactions in one place',
                     style: TextStyle(
-                        color: Colors.white.withOpacity(0.7), fontSize: 13),
+                        color: Colors.white.withValues(alpha: 0.7), fontSize: 13),
                   ).animate().fadeIn(delay: 100.ms, duration: 400.ms),
                 ],
               ),
@@ -284,7 +284,7 @@ class _TransactionHistoryScreenState
       child: Column(
         children: [
           Icon(Icons.receipt_long_rounded,
-              size: 60, color: AppColors.mediumGray.withOpacity(0.4)),
+              size: 60, color: AppColors.mediumGray.withValues(alpha: 0.4)),
           const SizedBox(height: 16),
           const Text('No transactions in this period',
               style: TextStyle(color: AppColors.mediumGray, fontSize: 14)),
@@ -375,7 +375,7 @@ class _ExpandableTransactionCardState
           boxShadow: _expanded ? AppColors.cardShadow : AppColors.softShadow,
           border: Border.all(
             color: _expanded
-                ? AppColors.primaryRed.withOpacity(0.3)
+                ? AppColors.primaryRed.withValues(alpha: 0.3)
                 : Colors.transparent,
             width: 1.5,
           ),
@@ -508,8 +508,8 @@ class _StatusChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: isSuccess
-            ? AppColors.success.withOpacity(0.12)
-            : AppColors.primaryRed.withOpacity(0.10),
+            ? AppColors.success.withValues(alpha: 0.12)
+            : AppColors.primaryRed.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
