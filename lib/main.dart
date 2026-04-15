@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/constants/app_routes.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/presentation/screens/login_screen.dart';
+import 'features/auth/presentation/screens/register_screen.dart';
 import 'features/onboarding/presentation/screens/onboarding_screen.dart';
 import 'features/payment/presentation/screens/payment_success_screen.dart';
 import 'features/scanner/presentation/screens/plate_scanner_screen.dart';
@@ -62,6 +63,9 @@ class GasStationPayApp extends StatelessWidget {
         break;
       case AppRoutes.login:
         page = const LoginScreen();
+        break;
+      case AppRoutes.register:
+        page = const RegisterScreen();
         break;
       case AppRoutes.dashboard:
         page = const MainShell();
