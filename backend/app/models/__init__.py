@@ -10,6 +10,7 @@ from sqlalchemy import (
     Enum,
     Float,
     ForeignKey,
+    Integer,
     String,
     Text,
     UniqueConstraint,
@@ -34,6 +35,7 @@ class TransactionStatus(str, enum.Enum):
     SUCCESS = "SUCCESS"
     FAILED = "FAILED"
     REFUNDED = "REFUNDED"
+    COMPLETED = "COMPLETED"   # Used by Smart Wallet demo flow
 
 
 class PaymentMethod(str, enum.Enum):
@@ -53,6 +55,7 @@ class Customer(Base):
     phone: Mapped[str] = mapped_column(String(20), unique=True, index=True)
     email: Mapped[str | None] = mapped_column(String(200), unique=True, nullable=True)
     hashed_password: Mapped[str] = mapped_column(String(255))
+    wallet_balance: Mapped[int] = mapped_column(Integer, default=0, nullable=False)  # VND cents-free integer
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc)
 

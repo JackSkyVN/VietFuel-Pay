@@ -11,6 +11,7 @@ from app.core.config import get_settings
 from app.core.database import engine, Base
 from app.core.exceptions import register_exception_handlers
 from app.routers import admin, auth as auth_router, customer, engine as engine_router, stations as stations_router
+from app.routers import transactions as transactions_router
 
 settings = get_settings()
 
@@ -69,6 +70,7 @@ def create_app() -> FastAPI:
     app.include_router(customer.router, prefix=api_prefix)
     app.include_router(admin.router, prefix=api_prefix)
     app.include_router(stations_router.router, prefix=api_prefix)
+    app.include_router(transactions_router.router, prefix=api_prefix)
 
     @app.get("/", tags=["Health"], summary="Health Check")
     async def health_check():

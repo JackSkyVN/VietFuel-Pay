@@ -7,6 +7,7 @@ import '../../../../core/constants/app_strings.dart';
 import '../../../../shared/widgets/animated_button.dart';
 import '../../../../shared/widgets/glass_card.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../../payment/presentation/widgets/payment_bottom_sheet.dart';
 import '../../domain/entities/transaction.dart';
 import '../providers/transaction_providers.dart';
 
@@ -275,10 +276,30 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   Widget _buildQuickActions() {
     final actions = [
-      _QuickAction(icon: Icons.qr_code_rounded, label: 'QR Pay', color: AppColors.primaryRed),
-      _QuickAction(icon: Icons.swap_horiz_rounded, label: 'Transfer', color: AppColors.info),
-      _QuickAction(icon: Icons.local_gas_station_rounded, label: 'Stations', color: AppColors.warning),
-      _QuickAction(icon: Icons.card_giftcard_rounded, label: 'Rewards', color: AppColors.success),
+      _QuickAction(icon: Icons.qr_code_rounded, label: 'QR Pay', color: AppColors.primaryRed, onTap: () {}),
+      _QuickAction(icon: Icons.swap_horiz_rounded, label: 'Transfer', color: AppColors.info, onTap: () {}),
+      _QuickAction(
+        icon: Icons.local_gas_station_rounded,
+        label: 'Pay Demo',
+        color: AppColors.warning,
+        onTap: () => showPaymentBottomSheet(
+          context: context,
+          licensePlate: '29A-123.45',
+          walletBalance: 1000000,
+          onPaymentSuccess: (newBalance) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Wallet updated: ${newBalance.toStringAsFixed(0)}đ'),
+                backgroundColor: AppColors.success,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              ),
+            );
+          },
+        ),
+      ),
+      _QuickAction(icon: Icons.card_giftcard_rounded, label: 'Rewards', color: AppColors.success, onTap: () {}),
     ];
 
     return Row(
@@ -718,7 +739,8 @@ class _QuickAction {
   final IconData icon;
   final String label;
   final Color color;
-  const _QuickAction({required this.icon, required this.label, required this.color});
+  final VoidCallback? onTap;
+  const _QuickAction({required this.icon, required this.label, required this.color, this.onTap});
 }
 
 class _QuickActionTile extends StatelessWidget {
@@ -728,7 +750,7 @@ class _QuickActionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {},
+      onTap: action.onTap ?? () {},
       child: Column(
         children: [
           Container(
