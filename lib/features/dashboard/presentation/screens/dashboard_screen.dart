@@ -1,13 +1,17 @@
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shimmer/shimmer.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_strings.dart';
+import '../../../../shared/providers/pending_payment_provider.dart';
+import '../../../../shared/providers/wallet_balance_provider.dart';
 import '../../../../shared/widgets/animated_button.dart';
 import '../../../../shared/widgets/glass_card.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
-import '../../../payment/presentation/widgets/payment_bottom_sheet.dart';
+import '../../../payment/presentation/widgets/payment_approval_sheet.dart';
 import '../../domain/entities/transaction.dart';
 import '../providers/transaction_providers.dart';
 
@@ -21,6 +25,8 @@ class DashboardScreen extends ConsumerStatefulWidget {
 class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   final ScrollController _scrollController = ScrollController();
   double _headerOpacity = 0;
+
+  bool _approvalSheetOpen = false;
 
   @override
   void initState() {
@@ -39,6 +45,36 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // ── Show approval sheet only when polling detects a payment ─────────────
+    // Polling never starts on its own — only after "Pump Demo" is pressed.
+    ref.listen<PendingPaymentState>(pendingPaymentProvider, (prev, next) {
+      // Only react when info becomes non-null for the first time
+      if (next.info != null && prev?.info == null && !_approvalSheetOpen) {
+        _approvalSheetOpen = true;
+        final payment = next.info!;
+        final balance = ref.read(walletBalanceSyncProvider);
+        showPaymentApprovalSheet(
+          context: context,
+          payment: payment,
+          currentBalance: balance,
+          onPaymentSuccess: (_) {
+            // Re-fetch the real balance from DB for the logged-in user.
+            // Using refresh() instead of invalidate() avoids the AsyncLoading
+            // flash that can cause a white screen on slow networks.
+            final customerId = ref.read(currentSessionProvider)?.customerId;
+            if (customerId != null) {
+              ref.read(walletBalanceProvider.notifier).refresh(customerId);
+            }
+            ref.read(pendingPaymentProvider.notifier).complete();
+          },
+          onDismiss: () {
+            ref.read(pendingPaymentProvider.notifier).dismiss(payment.transactionId);
+            _approvalSheetOpen = false;
+          },
+        );
+      }
+    });
+
     return Scaffold(
       backgroundColor: AppColors.lightGray,
       body: Stack(
@@ -170,6 +206,69 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
+  // ── Pump simulator (demo only) ─────────────────────────────────────────────
+  // Step 1: Call simulate-pump  → sets amount_vnd in the DB.
+  // Step 2: On success, call startPolling() → polls every 3 s for up to 60 s.
+  // Step 3: Notifier detects PENDING+amount → triggers ref.listen → sheet pops.
+  // Polling is 100% OFF when this method is not called (i.e. on normal app open).
+  Future<void> _simulatePump() async {
+    const baseUrl = kIsWeb ? 'http://127.0.0.1:8000' : 'http://10.0.2.2:8000';
+    try {
+      final dio = Dio(BaseOptions(
+        baseUrl: '$baseUrl/api/v1',
+        connectTimeout: const Duration(seconds: 8),
+        receiveTimeout: const Duration(seconds: 10),
+        validateStatus: (s) => s != null && s < 600,
+        headers: {'Content-Type': 'application/json'},
+      ));
+
+      final response = await dio.post('/transactions/simulate-pump', data: {
+        'amount_vnd': 150000,
+        'license_plate': '29A-123.45',
+        // Link the transaction to the logged-in customer so deductions hit
+        // the correct wallet, not the hardcoded demo customer.
+        'customer_id': ref.read(currentSessionProvider)?.customerId,
+      });
+
+      if (!mounted) return;
+
+      if (response.statusCode == 200) {
+        // Only start polling AFTER the pump successfully set the amount
+        ref.read(pendingPaymentProvider.notifier).startPolling();
+
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: const Row(children: [
+            Icon(Icons.sensors_rounded, color: Colors.white, size: 18),
+            SizedBox(width: 10),
+            Expanded(child: Text('Tram xang da gui yeu cau. Dang cho xac nhan...')),
+          ]),
+          backgroundColor: AppColors.info,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+          duration: const Duration(seconds: 4),
+        ));
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(response.data['detail'] ?? 'Loi ket noi tram xang.'),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        ));
+      }
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: const Text('Khong the ket noi den may chu.'),
+        backgroundColor: AppColors.error,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      ));
+    }
+  }
+
   Widget _buildFrostedAppBar() {
     return Container(
       height: MediaQuery.of(context).padding.top + 56,
@@ -204,6 +303,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }
 
   Widget _buildBalanceSection() {
+    // Watch the reactive wallet balance — backed by real DB fetch on login
+    final balance = ref.watch(walletBalanceSyncProvider);
+    final formatted = '\u20ab ${_formatBalance(balance)}';
+
     return GlassCard(
       glassColor: Colors.white.withValues(alpha: 0.9),
       borderColor: AppColors.borderGray,
@@ -216,38 +319,52 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               children: [
                 Text(
                   AppStrings.balance,
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: AppColors.mediumGray,
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
                 const SizedBox(height: 6),
-                const Text(
-                  '₫ 2,450,000',
-                  style: TextStyle(
-                    color: AppColors.charcoal,
-                    fontSize: 26,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.5,
+                // AnimatedSwitcher gives a smooth fade when the number changes
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 400),
+                  transitionBuilder: (child, anim) => FadeTransition(
+                    opacity: anim,
+                    child: SlideTransition(
+                      position: Tween<Offset>(
+                        begin: const Offset(0, 0.25),
+                        end: Offset.zero,
+                      ).animate(anim),
+                      child: child,
+                    ),
+                  ),
+                  child: Text(
+                    formatted,
+                    key: ValueKey(formatted),
+                    style: const TextStyle(
+                      color: AppColors.charcoal,
+                      fontSize: 26,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.5,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 8),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
                     color: AppColors.success.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: Row(
+                  child: const Row(
                     mainAxisSize: MainAxisSize.min,
-                    children: const [
+                    children: [
                       Icon(Icons.trending_up_rounded,
                           color: AppColors.success, size: 13),
                       SizedBox(width: 4),
                       Text(
-                        '+₫120K this month',
+                        '+\u20ab120K this month',
                         style: TextStyle(
                           color: AppColors.success,
                           fontSize: 11,
@@ -274,30 +391,25 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.15);
   }
 
+  /// Formats a VND double as "2,450,000" (dot-separated thousands).
+  String _formatBalance(double amount) {
+    return amount
+        .toStringAsFixed(0)
+        .replaceAllMapped(
+          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+          (m) => '${m[1]},',
+        );
+  }
+
   Widget _buildQuickActions() {
     final actions = [
       _QuickAction(icon: Icons.qr_code_rounded, label: 'QR Pay', color: AppColors.primaryRed, onTap: () {}),
       _QuickAction(icon: Icons.swap_horiz_rounded, label: 'Transfer', color: AppColors.info, onTap: () {}),
       _QuickAction(
-        icon: Icons.local_gas_station_rounded,
-        label: 'Pay Demo',
+        icon: Icons.sensors_rounded,
+        label: 'Pump Demo',
         color: AppColors.warning,
-        onTap: () => showPaymentBottomSheet(
-          context: context,
-          licensePlate: '29A-123.45',
-          walletBalance: 1000000,
-          onPaymentSuccess: (newBalance) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Wallet updated: ${newBalance.toStringAsFixed(0)}đ'),
-                backgroundColor: AppColors.success,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-              ),
-            );
-          },
-        ),
+        onTap: () => _simulatePump(),
       ),
       _QuickAction(icon: Icons.card_giftcard_rounded, label: 'Rewards', color: AppColors.success, onTap: () {}),
     ];

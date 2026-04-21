@@ -99,8 +99,16 @@ class ProfileResponse(BaseModel):
     full_name: str
     phone: str
     email: str | None
+    wallet_balance: int = 0  # VND
     created_at: datetime
     vehicles: list[VehicleResponse] = []
     payment_methods: list[PaymentMethodResponse] = []
 
     model_config = {"from_attributes": True}
+
+
+# ── Wallet balance (lightweight poll) ─────────────────────────────────────────
+
+class WalletBalanceResponse(BaseModel):
+    customer_id: str
+    wallet_balance: int  # VND

@@ -17,6 +17,7 @@ from app.schemas.customer import (
     TransactionHistoryResponse,
     VehicleCreate,
     VehicleResponse,
+    WalletBalanceResponse,
 )
 from app.services.customer_service import (
     add_vehicle,
@@ -180,3 +181,59 @@ async def register_vehicle_dev(
         raise NotFoundException("Customer profile not found")
         
     return await add_vehicle(customer.id, payload, db)
+
+
+# ── Wallet balance ─────────────────────────────────────────────────────────────
+
+@router.get(
+    "/wallet/balance",
+    response_model=WalletBalanceResponse,
+    summary="Get Wallet Balance (authenticated)",
+    description="Returns the authenticated customer's current wallet balance in VND.",
+)
+async def get_wallet_balance(
+    customer_id: Annotated[uuid.UUID, Depends(get_current_customer_id)],
+    db: AsyncSession = Depends(get_db),
+) -> WalletBalanceResponse:
+    from sqlalchemy import select
+    from app.models import Customer as CustomerModel
+    from app.core.exceptions import NotFoundException
+
+    result = await db.execute(
+        select(CustomerModel).where(CustomerModel.id == customer_id)
+    )
+    customer = result.scalar_one_or_none()
+    if not customer:
+        raise NotFoundException("Customer")
+    return WalletBalanceResponse(
+        customer_id=str(customer.id),
+        wallet_balance=customer.wallet_balance,
+    )
+
+
+@router.get(
+    "/wallet/balance/dev",
+    response_model=WalletBalanceResponse,
+    summary="[DEV] Get Wallet Balance by customerId (no auth)",
+    description="**Development only** - get wallet balance by customer UUID without JWT.",
+    tags=["Customer - Mobile App"],
+)
+async def get_wallet_balance_dev(
+    customer_id: str = Query(..., description="Customer UUID"),
+    db: AsyncSession = Depends(get_db),
+) -> WalletBalanceResponse:
+    import uuid as _uuid
+    from sqlalchemy import select
+    from app.models import Customer as CustomerModel
+    from app.core.exceptions import NotFoundException
+
+    result = await db.execute(
+        select(CustomerModel).where(CustomerModel.id == _uuid.UUID(customer_id))
+    )
+    customer = result.scalar_one_or_none()
+    if not customer:
+        raise NotFoundException("Customer")
+    return WalletBalanceResponse(
+        customer_id=str(customer.id),
+        wallet_balance=customer.wallet_balance,
+    )
