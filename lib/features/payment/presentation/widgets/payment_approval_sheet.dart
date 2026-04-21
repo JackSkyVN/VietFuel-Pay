@@ -84,7 +84,10 @@ class _PaymentApprovalSheetState extends State<_PaymentApprovalSheet>
       vsync: this,
       duration: const Duration(milliseconds: 400),
     );
-    _successScale = CurvedAnimation(parent: _successCtrl, curve: Curves.elasticOut);
+    _successScale = CurvedAnimation(
+      parent: _successCtrl,
+      curve: Curves.elasticOut,
+    );
     _checkOpacity = CurvedAnimation(parent: _checkCtrl, curve: Curves.easeIn);
   }
 
@@ -104,13 +107,15 @@ class _PaymentApprovalSheetState extends State<_PaymentApprovalSheet>
 
     try {
       final baseUrl = kIsWeb ? 'http://127.0.0.1:8000' : 'http://10.0.2.2:8000';
-      final dio = Dio(BaseOptions(
-        baseUrl: '$baseUrl/api/v1',
-        connectTimeout: const Duration(seconds: 10),
-        receiveTimeout: const Duration(seconds: 15),
-        headers: {'Content-Type': 'application/json'},
-        validateStatus: (s) => s != null && s < 600,
-      ));
+      final dio = Dio(
+        BaseOptions(
+          baseUrl: '$baseUrl/api/v1',
+          connectTimeout: const Duration(seconds: 10),
+          receiveTimeout: const Duration(seconds: 15),
+          headers: {'Content-Type': 'application/json'},
+          validateStatus: (s) => s != null && s < 600,
+        ),
+      );
 
       final response = await dio.post(
         '/transactions/${widget.payment.transactionId}/complete_demo',
@@ -153,18 +158,31 @@ class _PaymentApprovalSheetState extends State<_PaymentApprovalSheet>
   }
 
   void _showError(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Row(children: [
-        const Icon(Icons.error_outline_rounded, color: Colors.white, size: 18),
-        const SizedBox(width: 10),
-        Expanded(child: Text(msg, style: const TextStyle(color: Colors.white, fontSize: 13))),
-      ]),
-      backgroundColor: AppColors.error,
-      behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-      duration: const Duration(seconds: 4),
-    ));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(
+              Icons.error_outline_rounded,
+              color: Colors.white,
+              size: 18,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                msg,
+                style: const TextStyle(color: Colors.white, fontSize: 13),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: AppColors.error,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        duration: const Duration(seconds: 4),
+      ),
+    );
   }
 
   // ── build ──────────────────────────────────────────────────────────────────
@@ -176,7 +194,9 @@ class _PaymentApprovalSheetState extends State<_PaymentApprovalSheet>
         color: AppColors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
       child: SafeArea(
         top: false,
         child: Column(
@@ -186,7 +206,8 @@ class _PaymentApprovalSheetState extends State<_PaymentApprovalSheet>
             Padding(
               padding: const EdgeInsets.only(top: 14, bottom: 6),
               child: Container(
-                width: 40, height: 4,
+                width: 40,
+                height: 4,
                 decoration: BoxDecoration(
                   color: AppColors.borderGray,
                   borderRadius: BorderRadius.circular(100),
@@ -226,50 +247,84 @@ class _PaymentApprovalSheetState extends State<_PaymentApprovalSheet>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // ── Header ──────────────────────────────────────────────────────────
-        Row(children: [
-          // Pump icon badge with pulse
-          Container(
-            width: 52, height: 52,
-            decoration: BoxDecoration(
-              gradient: AppColors.primaryGradient,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [BoxShadow(
-                color: AppColors.primaryRed.withValues(alpha: 0.35),
-                blurRadius: 16, offset: const Offset(0, 4),
-              )],
-            ),
-            child: const Icon(Icons.local_gas_station_rounded,
-                color: AppColors.white, size: 26),
-          ).animate(onPlay: (c) => c.repeat(reverse: true))
-           .scaleXY(begin: 1.0, end: 1.05, duration: 900.ms, curve: Curves.easeInOut),
+        Row(
+          children: [
+            // Pump icon badge with pulse
+            Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    gradient: AppColors.primaryGradient,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primaryRed.withValues(alpha: 0.35),
+                        blurRadius: 16,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.local_gas_station_rounded,
+                    color: AppColors.white,
+                    size: 26,
+                  ),
+                )
+                .animate(onPlay: (c) => c.repeat(reverse: true))
+                .scaleXY(
+                  begin: 1.0,
+                  end: 1.05,
+                  duration: 900.ms,
+                  curve: Curves.easeInOut,
+                ),
 
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('Yeu cau thanh toan!',
-                style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w800,
-                    color: AppColors.charcoal, letterSpacing: -0.3)),
-              const SizedBox(height: 2),
-              Text(
-                widget.payment.stationId != null
-                    ? 'Tram ${widget.payment.stationId}'
-                    : 'Tram xang thong minh',
-                style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500,
-                    color: AppColors.mediumGray),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Yeu cau thanh toan!',
+                    style: GoogleFonts.inter(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.charcoal,
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    widget.payment.stationId != null
+                        ? 'Tram ${widget.payment.stationId}'
+                        : 'Tram xang thong minh',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.mediumGray,
+                    ),
+                  ),
+                ],
               ),
-            ]),
-          ),
-          // Dismiss
-          GestureDetector(
-            onTap: isLoading ? null : _cancel,
-            child: Container(
-              width: 36, height: 36,
-              decoration: BoxDecoration(
-                  color: AppColors.lightGray, borderRadius: BorderRadius.circular(10)),
-              child: const Icon(Icons.close_rounded, size: 18, color: AppColors.mediumGray),
             ),
-          ),
-        ]).animate().fadeIn(duration: 300.ms).slideY(begin: -0.1),
+            // Dismiss
+            GestureDetector(
+              onTap: isLoading ? null : _cancel,
+              child: Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: AppColors.lightGray,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.close_rounded,
+                  size: 18,
+                  color: AppColors.mediumGray,
+                ),
+              ),
+            ),
+          ],
+        ).animate().fadeIn(duration: 300.ms).slideY(begin: -0.1),
 
         const SizedBox(height: 20),
 
@@ -283,31 +338,56 @@ class _PaymentApprovalSheetState extends State<_PaymentApprovalSheet>
                 AppColors.primaryRed.withValues(alpha: 0.06),
                 AppColors.primaryRed.withValues(alpha: 0.02),
               ],
-              begin: Alignment.topLeft, end: Alignment.bottomRight,
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.primaryRed.withValues(alpha: 0.18)),
+            border: Border.all(
+              color: AppColors.primaryRed.withValues(alpha: 0.18),
+            ),
           ),
-          child: Column(children: [
-            Text('So tien can thanh toan',
-              style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500,
-                  color: AppColors.mediumGray)),
-            const SizedBox(height: 8),
-            Text(_formatVnd(widget.payment.amountVnd),
-              style: GoogleFonts.inter(fontSize: 34, fontWeight: FontWeight.w900,
-                  color: AppColors.primaryRed, letterSpacing: -1.0)),
-            const SizedBox(height: 12),
-            // Details row
-            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-              _InfoChip(icon: Icons.directions_car_rounded,
-                  label: widget.payment.licensePlate, color: AppColors.info),
-              if (widget.payment.pumpId != null) ...[
-                const SizedBox(width: 8),
-                _InfoChip(icon: Icons.ev_station_rounded,
-                    label: widget.payment.pumpId!, color: AppColors.success),
-              ],
-            ]),
-          ]),
+          child: Column(
+            children: [
+              Text(
+                'So tien can thanh toan',
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.mediumGray,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                _formatVnd(widget.payment.amountVnd),
+                style: GoogleFonts.inter(
+                  fontSize: 34,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.primaryRed,
+                  letterSpacing: -1.0,
+                ),
+              ),
+              const SizedBox(height: 12),
+              // Details row
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _InfoChip(
+                    icon: Icons.directions_car_rounded,
+                    label: widget.payment.licensePlate,
+                    color: AppColors.info,
+                  ),
+                  if (widget.payment.pumpId != null) ...[
+                    const SizedBox(width: 8),
+                    _InfoChip(
+                      icon: Icons.ev_station_rounded,
+                      label: widget.payment.pumpId!,
+                      color: AppColors.success,
+                    ),
+                  ],
+                ],
+              ),
+            ],
+          ),
         ).animate().fadeIn(delay: 80.ms, duration: 320.ms).slideY(begin: 0.12),
 
         const SizedBox(height: 16),
@@ -327,81 +407,125 @@ class _PaymentApprovalSheetState extends State<_PaymentApprovalSheet>
                   : AppColors.error.withValues(alpha: 0.25),
             ),
           ),
-          child: Row(children: [
-            Icon(
-              canPay ? Icons.account_balance_wallet_rounded : Icons.warning_amber_rounded,
-              color: canPay ? AppColors.success : AppColors.error, size: 18,
-            ),
-            const SizedBox(width: 10),
-            Expanded(child: Text(
-              canPay
-                  ? 'So du vi: ${_formatVnd(_currentBalance.toInt())}  •  Con lai: ${_formatVnd((_currentBalance - widget.payment.amountVnd).toInt())}'
-                  : 'So du vi khong du. Can nan them ${_formatVnd(widget.payment.amountVnd - _currentBalance.toInt())}.',
-              style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500,
-                  color: canPay ? AppColors.success : AppColors.error),
-            )),
-          ]),
+          child: Row(
+            children: [
+              Icon(
+                canPay
+                    ? Icons.account_balance_wallet_rounded
+                    : Icons.warning_amber_rounded,
+                color: canPay ? AppColors.success : AppColors.error,
+                size: 18,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  canPay
+                      ? 'So du vi: ${_formatVnd(_currentBalance.toInt())}  •  Con lai: ${_formatVnd((_currentBalance - widget.payment.amountVnd).toInt())}'
+                      : 'So du vi khong du. Can nan them ${_formatVnd(widget.payment.amountVnd - _currentBalance.toInt())}.',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: canPay ? AppColors.success : AppColors.error,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ).animate().fadeIn(delay: 160.ms, duration: 280.ms),
 
         const SizedBox(height: 20),
 
         // ── Buttons ──────────────────────────────────────────────────────────
-        Row(children: [
-          // Cancel
-          Expanded(
-            flex: 4,
-            child: GestureDetector(
-              onTap: isLoading ? null : _cancel,
-              child: Container(
-                height: 54,
-                decoration: BoxDecoration(
-                  color: AppColors.lightGray,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.borderGray),
-                ),
-                child: Center(
-                  child: Text('Tu choi',
-                    style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600,
-                        color: AppColors.mediumGray)),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          // Confirm
-          Expanded(
-            flex: 6,
-            child: GestureDetector(
-              onTap: canPay && !isLoading ? _confirmPayment : null,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                height: 54,
-                decoration: BoxDecoration(
-                  gradient: canPay
-                      ? AppColors.primaryGradient
-                      : const LinearGradient(colors: [Color(0xFFCCCCCC), Color(0xFFBBBBBB)]),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: canPay && !isLoading
-                      ? [BoxShadow(color: AppColors.primaryRed.withValues(alpha: 0.40),
-                          blurRadius: 18, offset: const Offset(0, 6))]
-                      : [],
-                ),
-                child: Center(
-                  child: isLoading
-                      ? const SizedBox(width: 20, height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
-                      : Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                          const Icon(Icons.bolt_rounded, color: AppColors.white, size: 18),
-                          const SizedBox(width: 6),
-                          Text('Xac nhan thanh toan',
-                            style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700,
-                                color: AppColors.white)),
-                        ]),
+        Row(
+          children: [
+            // Cancel
+            Expanded(
+              flex: 4,
+              child: GestureDetector(
+                onTap: isLoading ? null : _cancel,
+                child: Container(
+                  height: 54,
+                  decoration: BoxDecoration(
+                    color: AppColors.lightGray,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppColors.borderGray),
+                  ),
+                  child: Center(
+                    child: Text(
+                      'Tu choi',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.mediumGray,
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
-        ]).animate().fadeIn(delay: 240.ms, duration: 300.ms).slideY(begin: 0.15),
+            const SizedBox(width: 12),
+            // Confirm
+            Expanded(
+              flex: 6,
+              child: GestureDetector(
+                onTap: canPay && !isLoading ? _confirmPayment : null,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  height: 54,
+                  decoration: BoxDecoration(
+                    gradient: canPay
+                        ? AppColors.primaryGradient
+                        : const LinearGradient(
+                            colors: [Color(0xFFCCCCCC), Color(0xFFBBBBBB)],
+                          ),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: canPay && !isLoading
+                        ? [
+                            BoxShadow(
+                              color: AppColors.primaryRed.withValues(
+                                alpha: 0.40,
+                              ),
+                              blurRadius: 18,
+                              offset: const Offset(0, 6),
+                            ),
+                          ]
+                        : [],
+                  ),
+                  child: Center(
+                    child: isLoading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.5,
+                              color: Colors.white,
+                            ),
+                          )
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                Icons.bolt_rounded,
+                                color: AppColors.white,
+                                size: 18,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Xac nhan thanh toan',
+                                style: GoogleFonts.inter(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ).animate().fadeIn(delay: 240.ms, duration: 300.ms).slideY(begin: 0.15),
       ],
     );
   }
@@ -416,26 +540,43 @@ class _PaymentApprovalSheetState extends State<_PaymentApprovalSheet>
         ScaleTransition(
           scale: _successScale,
           child: Container(
-            width: 90, height: 90,
+            width: 90,
+            height: 90,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: AppColors.successGradient,
-              boxShadow: [BoxShadow(color: AppColors.success.withValues(alpha: 0.40),
-                  blurRadius: 28, spreadRadius: 4, offset: const Offset(0, 8))],
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.success.withValues(alpha: 0.40),
+                  blurRadius: 28,
+                  spreadRadius: 4,
+                  offset: const Offset(0, 8),
+                ),
+              ],
             ),
             child: FadeTransition(
               opacity: _checkOpacity,
-              child: const Icon(Icons.check_rounded, color: Colors.white, size: 48),
+              child: const Icon(
+                Icons.check_rounded,
+                color: Colors.white,
+                size: 48,
+              ),
             ),
           ),
         ),
         const SizedBox(height: 22),
-        Text('Thanh toan thanh cong!',
-          style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w800,
-              color: AppColors.charcoal, letterSpacing: -0.4),
+        Text(
+          'Thanh toan thanh cong!',
+          style: GoogleFonts.inter(
+            fontSize: 20,
+            fontWeight: FontWeight.w800,
+            color: AppColors.charcoal,
+            letterSpacing: -0.4,
+          ),
         ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.2),
         const SizedBox(height: 6),
-        Text('${_formatVnd(widget.payment.amountVnd)} da duoc tru tu vi',
+        Text(
+          '${_formatVnd(widget.payment.amountVnd)} da duoc tru tu vi',
           style: GoogleFonts.inter(fontSize: 14, color: AppColors.mediumGray),
         ).animate().fadeIn(delay: 500.ms),
         const SizedBox(height: 20),
@@ -444,16 +585,29 @@ class _PaymentApprovalSheetState extends State<_PaymentApprovalSheet>
           decoration: BoxDecoration(
             color: AppColors.success.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(50),
-            border: Border.all(color: AppColors.success.withValues(alpha: 0.25)),
+            border: Border.all(
+              color: AppColors.success.withValues(alpha: 0.25),
+            ),
           ),
-          child: Row(mainAxisSize: MainAxisSize.min, children: [
-            const Icon(Icons.account_balance_wallet_rounded,
-                color: AppColors.success, size: 18),
-            const SizedBox(width: 8),
-            Text('So du moi: ${_formatVnd(_currentBalance.toInt())}',
-              style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600,
-                  color: AppColors.success)),
-          ]),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.account_balance_wallet_rounded,
+                color: AppColors.success,
+                size: 18,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'So du moi: ${_formatVnd(_currentBalance.toInt())}',
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.success,
+                ),
+              ),
+            ],
+          ),
         ).animate().fadeIn(delay: 600.ms).scale(begin: const Offset(0.9, 0.9)),
         const SizedBox(height: 28),
       ],
@@ -478,7 +632,11 @@ class _InfoChip extends StatelessWidget {
   final String label;
   final Color color;
 
-  const _InfoChip({required this.icon, required this.label, required this.color});
+  const _InfoChip({
+    required this.icon,
+    required this.label,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -489,12 +647,21 @@ class _InfoChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: color.withValues(alpha: 0.25)),
       ),
-      child: Row(mainAxisSize: MainAxisSize.min, children: [
-        Icon(icon, size: 13, color: color),
-        const SizedBox(width: 5),
-        Text(label,
-          style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: color)),
-      ]),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: color),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

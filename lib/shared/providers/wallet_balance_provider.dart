@@ -9,26 +9,30 @@ import '../../../features/auth/presentation/providers/auth_providers.dart';
 // ─────────────────────────────────────────────────────────────────────────────
 
 class WalletBalanceNotifier extends AsyncNotifier<double> {
-  static const _baseUrl =
-      kIsWeb ? 'http://127.0.0.1:8000' : 'http://10.0.2.2:8000';
+  static const _baseUrl = kIsWeb
+      ? 'http://127.0.0.1:8000'
+      : 'http://10.0.2.2:8000';
 
   @override
   Future<double> build() async {
-    // Use ref.read (not ref.watch) to avoid reactive rebuild loops.
-    // We fetch once on build; after that, setBalance or invalidate updates it.
-    final session = ref.read(currentSessionProvider);
+    // ref.watch is intentional: currentSessionProvider is null while SharedPreferences
+    // loads on startup, then emits the real AuthSession. ref.watch re-runs build()
+    // at that moment so the balance is fetched for the correct user, not stuck at 0.
+    final session = ref.watch(currentSessionProvider);
     if (session == null) return 0;
     return _fetchBalance(session.customerId);
   }
 
   Future<double> _fetchBalance(String customerId) async {
     try {
-      final dio = Dio(BaseOptions(
-        baseUrl: '$_baseUrl/api/v1',
-        connectTimeout: const Duration(seconds: 8),
-        receiveTimeout: const Duration(seconds: 10),
-        validateStatus: (s) => s != null && s < 600,
-      ));
+      final dio = Dio(
+        BaseOptions(
+          baseUrl: '$_baseUrl/api/v1',
+          connectTimeout: const Duration(seconds: 8),
+          receiveTimeout: const Duration(seconds: 10),
+          validateStatus: (s) => s != null && s < 600,
+        ),
+      );
       final response = await dio.get(
         '/customer/wallet/balance/dev',
         queryParameters: {'customer_id': customerId},
@@ -58,15 +62,13 @@ class WalletBalanceNotifier extends AsyncNotifier<double> {
 
 final walletBalanceProvider =
     AsyncNotifierProvider<WalletBalanceNotifier, double>(
-  WalletBalanceNotifier.new,
-);
+      WalletBalanceNotifier.new,
+    );
 
 /// Synchronous convenience — returns 0 safely while loading or on error.
 final walletBalanceSyncProvider = Provider<double>((ref) {
   // .when handles loading, error, and data safely — never throws
-  return ref.watch(walletBalanceProvider).when(
-    data: (v) => v,
-    loading: () => 0,
-    error: (e, _) => 0,
-  );
+  return ref
+      .watch(walletBalanceProvider)
+      .when(data: (v) => v, loading: () => 0, error: (e, _) => 0);
 });
