@@ -9,6 +9,7 @@ import 'features/onboarding/presentation/screens/onboarding_screen.dart';
 import 'features/payment/presentation/screens/payment_success_screen.dart';
 import 'features/scanner/presentation/screens/plate_scanner_screen.dart';
 import 'features/profile/presentation/screens/settings_screen.dart';
+import 'features/staff/presentation/screens/staff_dashboard_screen.dart';
 import 'shared/widgets/main_shell.dart';
 
 void main() {
@@ -77,6 +78,9 @@ class GasStationPayApp extends StatelessWidget {
           amountPaid: args?['amountPaid'] ?? 0.0,
           litersFueled: args?['litersFueled'] ?? 0.0,
         );
+        break;
+      case AppRoutes.staffDashboard:
+        page = const StaffDashboardScreen();
         break;
       case AppRoutes.plateCapture:
         page = const PlateScannerScreen();

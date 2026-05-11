@@ -12,6 +12,15 @@ import '../../../../shared/widgets/animated_button.dart';
 import '../../data/datasources/auth_remote_datasource.dart';
 import '../providers/auth_providers.dart';
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Login Screen – single unified form.
+//
+// The backend /auth/login endpoint checks customers first, then staff_members.
+// The returned `role` field determines which screen to navigate to:
+//   "customer"              →  /dashboard   (customer MainShell)
+//   "cashier" | "supervisor" | "manager"  →  /staff-dashboard  (POS)
+// ─────────────────────────────────────────────────────────────────────────────
+
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
@@ -45,9 +54,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       final dio = ref.read(dioProvider);
       final ds = AuthRemoteDataSource(dio);
 
-      // The phone field shows digits only; prefix with '0' to match DB format.
-      // Users see "+84" hint but type local digits, e.g. "901234567".
-      // We normalise: if they omit the leading 0 we add it.
+      // Normalise phone: users type local digits, e.g. "901234567".
+      // We ensure the leading 0 is present to match DB format "0901234567".
       String phone = _phoneCtrl.text.trim();
       if (phone.startsWith('84')) {
         phone = '0${phone.substring(2)}';
@@ -57,31 +65,41 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
       final data = await ds.login(phone: phone, password: _passCtrl.text);
 
-      // Store session globally so all screens can read it
+      final role = (data['role'] as String?) ?? 'customer';
+
+      // Persist session (SharedPreferences via AsyncNotifier)
       await ref.read(authSessionProvider.notifier).login(
             AuthSession(
               accessToken: data['access_token'] as String,
               customerId: data['customer_id'] as String,
               fullName: data['full_name'] as String,
               phone: data['phone'] as String,
+              role: role,
             ),
           );
 
-      if (mounted) {
-        Navigator.of(context).pushReplacementNamed('/dashboard');
-      }
+      if (!mounted) return;
+
+      // Route based on role
+      final isStaff = role != 'customer';
+      Navigator.of(context).pushReplacementNamed(
+        isStaff ? AppRoutes.staffDashboard : AppRoutes.dashboard,
+      );
     } on DioException catch (e) {
       final statusCode = e.response?.statusCode;
       if (statusCode == 401) {
         setState(() =>
             _errorMessage = 'Incorrect phone number or password. Please try again.');
       } else if (statusCode == 403) {
-        setState(() => _errorMessage = 'Your account has been disabled. Contact support.');
+        setState(
+            () => _errorMessage = 'Your account has been disabled. Contact support.');
       } else {
-        setState(() => _errorMessage = 'Network error. Please check your connection.');
+        setState(
+            () => _errorMessage = 'Network error. Please check your connection.');
       }
     } catch (_) {
-      setState(() => _errorMessage = 'An unexpected error occurred. Please try again.');
+      setState(
+          () => _errorMessage = 'An unexpected error occurred. Please try again.');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -106,7 +124,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.vertical(bottom: Radius.circular(40)),
+                borderRadius:
+                    BorderRadius.vertical(bottom: Radius.circular(40)),
               ),
             ),
           ),
@@ -117,7 +136,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               child: Column(
                 children: [
                   const SizedBox(height: 40),
-                  // App logo / name
+
+                  // ── App logo / name ───────────────────────────────────────
                   Column(
                     children: [
                       Container(
@@ -126,14 +146,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(22),
-                          border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                          border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.3)),
                         ),
                         child: const Icon(
                           Icons.local_gas_station_rounded,
                           color: Colors.white,
                           size: 38,
                         ),
-                      ).animate().scale(duration: 600.ms, curve: Curves.elasticOut),
+                      ).animate().scale(
+                          duration: 600.ms, curve: Curves.elasticOut),
                       const SizedBox(height: 16),
                       const Text(
                         AppStrings.appName,
@@ -158,7 +180,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                   const SizedBox(height: 48),
 
-                  // Form card
+                  // ── Form card ─────────────────────────────────────────────
                   Container(
                     padding: const EdgeInsets.all(28),
                     decoration: BoxDecoration(
@@ -193,15 +215,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           TextFormField(
                             controller: _phoneCtrl,
                             keyboardType: TextInputType.phone,
-                            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly
+                            ],
                             decoration: const InputDecoration(
                               labelText: AppStrings.phoneNumber,
                               prefixIcon: Icon(Icons.phone_rounded,
                                   color: AppColors.mediumGray),
                               prefixText: '+84 ',
                             ),
-                            validator: (v) =>
-                                (v == null || v.length < 9) ? 'Enter valid phone number' : null,
+                            validator: (v) => (v == null || v.length < 9)
+                                ? 'Enter valid phone number'
+                                : null,
                           ),
                           const SizedBox(height: 16),
 
@@ -220,15 +245,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                       : Icons.visibility_rounded,
                                   color: AppColors.mediumGray,
                                 ),
-                                onPressed: () =>
-                                    setState(() => _obscurePass = !_obscurePass),
+                                onPressed: () => setState(
+                                    () => _obscurePass = !_obscurePass),
                               ),
                             ),
-                            validator: (v) =>
-                                (v == null || v.length < 6) ? 'Password too short' : null,
+                            validator: (v) => (v == null || v.length < 6)
+                                ? 'Password too short'
+                                : null,
                           ),
 
-                          // ── Error banner ────────────────────────────────
+                          // ── Error banner ─────────────────────────────────
                           if (_errorMessage != null) ...[
                             const SizedBox(height: 16),
                             Container(
@@ -238,7 +264,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 color: AppColors.primaryRed.withValues(alpha: 0.08),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                    color: AppColors.primaryRed.withValues(alpha: 0.3)),
+                                    color:
+                                        AppColors.primaryRed.withValues(alpha: 0.3)),
                               ),
                               child: Row(
                                 children: [
@@ -266,7 +293,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             alignment: Alignment.centerRight,
                             child: TextButton(
                               onPressed: () {},
-                              child: const Text(AppStrings.forgotPassword),
+                              child:
+                                  const Text(AppStrings.forgotPassword),
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -284,7 +312,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             children: [
                               const Expanded(child: Divider()),
                               Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 12),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12),
                                 child: Text(
                                   AppStrings.orContinueWith,
                                   style: const TextStyle(
@@ -322,7 +351,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                   const SizedBox(height: 24),
 
-                  // Sign-up link
+                  // ── Sign-up link ──────────────────────────────────────────
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -346,6 +375,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 }
+
+// ── Social Button ─────────────────────────────────────────────────────────────
 
 class _SocialButton extends StatelessWidget {
   final IconData icon;

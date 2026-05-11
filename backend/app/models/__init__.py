@@ -1,6 +1,7 @@
 """
 ORM Models – database table definitions.
 """
+import enum
 import uuid
 from datetime import datetime, timezone
 
@@ -12,8 +13,6 @@ from sqlalchemy import (
     ForeignKey,
     Integer,
     String,
-    Text,
-    UniqueConstraint,
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -26,8 +25,6 @@ def now_utc() -> datetime:
 
 
 # ── Enums ─────────────────────────────────────────────────────────────────────
-
-import enum
 
 
 class TransactionStatus(str, enum.Enum):
@@ -42,6 +39,12 @@ class PaymentMethod(str, enum.Enum):
     LINKED_CARD = "LINKED_CARD"
     OFFLINE_QR = "OFFLINE_QR"
     MANUAL = "MANUAL"
+
+
+class StaffRole(str, enum.Enum):
+    CASHIER = "CASHIER"
+    SUPERVISOR = "SUPERVISOR"
+    MANAGER = "MANAGER"
 
 
 # ── Models ────────────────────────────────────────────────────────────────────
@@ -153,3 +156,41 @@ class GasStation(Base):
     longitude: Mapped[float] = mapped_column(Float)
     status: Mapped[str] = mapped_column(String(20), default="OPEN")  # OPEN | CLOSED | BUSY
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc)
+
+
+class StaffMember(Base):
+    """Gas station staff who use the POS StaffDashboard."""
+    __tablename__ = "staff_members"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    full_name: Mapped[str] = mapped_column(String(120))
+    phone: Mapped[str] = mapped_column(String(20), unique=True, index=True)
+    employee_code: Mapped[str] = mapped_column(String(40), unique=True, index=True)
+    hashed_password: Mapped[str] = mapped_column(String(255))
+    role: Mapped[StaffRole] = mapped_column(Enum(StaffRole), default=StaffRole.CASHIER)
+    station_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("gas_stations.id", ondelete="SET NULL"), nullable=True
+    )
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc)
+
+    shift_transactions: Mapped[list["ShiftTransaction"]] = relationship(
+        back_populates="staff", cascade="all, delete-orphan"
+    )
+
+
+class ShiftTransaction(Base):
+    """A fuel-dispensing transaction recorded by a POS staff member."""
+    __tablename__ = "shift_transactions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    staff_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("staff_members.id", ondelete="CASCADE")
+    )
+    license_plate: Mapped[str] = mapped_column(String(20), index=True)
+    pump_number: Mapped[int] = mapped_column(Integer)
+    amount_vnd: Mapped[int] = mapped_column(Integer)       # whole VND
+    payment_method: Mapped[str] = mapped_column(String(40), default="CASH")  # CASH | QR | CARD
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc)
+
+    staff: Mapped["StaffMember"] = relationship(back_populates="shift_transactions")

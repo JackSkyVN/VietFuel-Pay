@@ -1,8 +1,10 @@
 """
 Router – Authentication  (/api/v1/auth)
 
-POST /auth/login     – validate phone + password, return JWT access token
-POST /auth/register  – create new account, return JWT access token
+POST /auth/login        – Customer: validate phone + password, return JWT
+POST /auth/register     – Customer: create account, return JWT
+POST /auth/staff-login  – Staff: validate phone/employee_code + password,
+                          return JWT with role field
 """
 from __future__ import annotations
 
@@ -15,7 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.security import create_access_token, hash_password, verify_password
-from app.models import Customer
+from app.models import Customer, StaffMember
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -54,89 +56,118 @@ class RegisterRequest(BaseModel):
             raise ValueError("Password must contain at least one uppercase letter.")
         if not re.search(r"[0-9]", v):
             raise ValueError("Password must contain at least one number.")
-        if not re.search(r"[!@#$%^&*(),.?\":{}|<>_\-+=/\\[\]~`]", v):
+        if not re.search(r"[!@#$%^&*(),.?\":{}|<>_\-+=/\\\[\]~`]", v):
             raise ValueError("Password must contain at least one special character.")
         return v
 
 
 class LoginResponse(BaseModel):
+    """Returned for both customer and staff logins."""
     access_token: str
     token_type: str = "bearer"
-    customer_id: str
+    customer_id: str          # maps to either customer.id or staff_member.id
     full_name: str
     phone: str
+    role: str = "customer"    # "customer" | "cashier" | "supervisor" | "manager"
 
 
-# ── Login ─────────────────────────────────────────────────────────────────────
+class StaffLoginRequest(BaseModel):
+    """Staff can log in with either their phone OR their employee_code."""
+    identifier: str = Field(
+        ...,
+        examples=["0901111001", "NV001"],
+        description="Phone number OR employee code",
+    )
+    password: str = Field(..., min_length=6, examples=["Staff@1234"])
+
+
+# ── Customer Login ─────────────────────────────────────────────────────────────
 
 @router.post(
     "/login",
     response_model=LoginResponse,
-    summary="Customer Login (Đăng nhập)",
+    summary="Unified Login (Đăng nhập)",
     description=(
-        "Authenticates a customer by phone number and password. "
-        "Returns a JWT access token on success. "
-        "Returns **401 Unauthorized** if the phone or password is incorrect."
+        "Authenticates a **customer** or a **staff member** with a single endpoint. "
+        "The backend checks the customers table first; if no match is found, it checks "
+        "the staff_members table. The response always includes a `role` field "
+        "(`customer` | `cashier` | `supervisor` | `manager`) so the client can "
+        "route to the correct dashboard without any manual role selection."
     ),
 )
 async def login(
     payload: LoginRequest,
     db: AsyncSession = Depends(get_db),
 ) -> LoginResponse:
-    # 1. Look up customer by phone
-    result = await db.execute(
-        select(Customer).where(Customer.phone == payload.phone)
-    )
-    customer = result.scalar_one_or_none()
-
-    # 2. Verify existence and password – use the same error for both
-    #    to avoid leaking whether the phone exists (security best-practice).
     INVALID = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Incorrect phone number or password.",
         headers={"WWW-Authenticate": "Bearer"},
     )
 
-    if customer is None:
-        raise INVALID
-    if not customer.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Account is disabled. Please contact support.",
-        )
-    if not verify_password(payload.password, customer.hashed_password):
-        raise INVALID
-
-    # 3. Issue JWT
-    token = create_access_token(data={"sub": str(customer.id)})
-
-    return LoginResponse(
-        access_token=token,
-        token_type="bearer",
-        customer_id=str(customer.id),
-        full_name=customer.full_name,
-        phone=customer.phone,
+    # ── 1. Try customer table ─────────────────────────────────────────────────
+    cust_result = await db.execute(
+        select(Customer).where(Customer.phone == payload.phone)
     )
+    customer = cust_result.scalar_one_or_none()
+
+    if customer is not None:
+        if not customer.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Account is disabled. Please contact support.",
+            )
+        if not verify_password(payload.password, customer.hashed_password):
+            raise INVALID
+        token = create_access_token(data={"sub": str(customer.id), "role": "customer"})
+        return LoginResponse(
+            access_token=token,
+            customer_id=str(customer.id),
+            full_name=customer.full_name,
+            phone=customer.phone,
+            role="customer",
+        )
+
+    # ── 2. Try staff table (phone match) ──────────────────────────────────────
+    staff_result = await db.execute(
+        select(StaffMember).where(StaffMember.phone == payload.phone)
+    )
+    staff = staff_result.scalar_one_or_none()
+
+    if staff is not None:
+        if not staff.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Staff account is disabled. Contact your manager.",
+            )
+        if not verify_password(payload.password, staff.hashed_password):
+            raise INVALID
+        role = staff.role.value.lower()
+        token = create_access_token(data={"sub": str(staff.id), "role": role})
+        return LoginResponse(
+            access_token=token,
+            customer_id=str(staff.id),
+            full_name=staff.full_name,
+            phone=staff.phone,
+            role=role,
+        )
+
+    # ── 3. Neither found ──────────────────────────────────────────────────────
+    raise INVALID
 
 
-# ── Register ──────────────────────────────────────────────────────────────────
+# ── Customer Register ─────────────────────────────────────────────────────────
 
 @router.post(
     "/register",
     response_model=LoginResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Customer Register (Đăng ký)",
-    description=(
-        "Creates a new customer account with a bcrypt-hashed password. "
-        "Returns a JWT access token on success so the client can auto-login. "
-        "Returns **409 Conflict** if the phone number is already registered."
-    ),
 )
 async def register(
     payload: RegisterRequest,
     db: AsyncSession = Depends(get_db),
 ) -> LoginResponse:
-    # 1. Check for duplicate phone
     existing = await db.execute(
         select(Customer).where(Customer.phone == payload.phone)
     )
@@ -146,7 +177,6 @@ async def register(
             detail="This phone number is already registered. Please log in.",
         )
 
-    # 2. Create customer with hashed password
     new_customer = Customer(
         full_name=payload.full_name.strip(),
         phone=payload.phone,
@@ -158,8 +188,7 @@ async def register(
     await db.commit()
     await db.refresh(new_customer)
 
-    # 3. Issue JWT (auto-login after registration)
-    token = create_access_token(data={"sub": str(new_customer.id)})
+    token = create_access_token(data={"sub": str(new_customer.id), "role": "customer"})
 
     return LoginResponse(
         access_token=token,
@@ -167,72 +196,62 @@ async def register(
         customer_id=str(new_customer.id),
         full_name=new_customer.full_name,
         phone=new_customer.phone,
+        role="customer",
     )
 
 
-
-# ── Schemas ───────────────────────────────────────────────────────────────────
-
-class LoginRequest(BaseModel):
-    phone: str = Field(..., examples=["0901234567"], description="Customer phone number")
-    password: str = Field(..., min_length=6, examples=["Demo@1234"])
-
-
-class LoginResponse(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
-    customer_id: str
-    full_name: str
-    phone: str
-
-
-# ── Endpoint ──────────────────────────────────────────────────────────────────
+# ── Staff Login ───────────────────────────────────────────────────────────────
 
 @router.post(
-    "/login",
+    "/staff-login",
     response_model=LoginResponse,
-    summary="Customer Login (Đăng nhập)",
+    summary="Staff POS Login (Nhân viên đăng nhập)",
     description=(
-        "Authenticates a customer by phone number and password. "
-        "Returns a JWT access token on success. "
-        "Returns **401 Unauthorized** if the phone or password is incorrect."
+        "Authenticates a gas station staff member by **phone number OR employee code** "
+        "plus password. Returns a JWT with the staff role embedded so the Flutter app "
+        "can route to the StaffDashboardScreen."
     ),
 )
-async def login(
-    payload: LoginRequest,
+async def staff_login(
+    payload: StaffLoginRequest,
     db: AsyncSession = Depends(get_db),
 ) -> LoginResponse:
-    # 1. Look up customer by phone
+    # Try phone first, then employee_code
     result = await db.execute(
-        select(Customer).where(Customer.phone == payload.phone)
+        select(StaffMember).where(StaffMember.phone == payload.identifier)
     )
-    customer = result.scalar_one_or_none()
+    staff = result.scalar_one_or_none()
 
-    # 2. Verify existence and password – use the same error for both
-    #    to avoid leaking whether the phone exists (security best-practice).
+    if staff is None:
+        result2 = await db.execute(
+            select(StaffMember).where(StaffMember.employee_code == payload.identifier)
+        )
+        staff = result2.scalar_one_or_none()
+
     INVALID = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Incorrect phone number or password.",
+        detail="Incorrect identifier or password.",
         headers={"WWW-Authenticate": "Bearer"},
     )
 
-    if customer is None:
+    if staff is None:
         raise INVALID
-    if not customer.is_active:
+    if not staff.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Account is disabled. Please contact support.",
+            detail="Staff account is disabled. Contact your manager.",
         )
-    if not verify_password(payload.password, customer.hashed_password):
+    if not verify_password(payload.password, staff.hashed_password):
         raise INVALID
 
-    # 3. Issue JWT
-    token = create_access_token(data={"sub": str(customer.id)})
+    role = staff.role.value.lower()   # "cashier" | "supervisor" | "manager"
+    token = create_access_token(data={"sub": str(staff.id), "role": role})
 
     return LoginResponse(
         access_token=token,
         token_type="bearer",
-        customer_id=str(customer.id),
-        full_name=customer.full_name,
-        phone=customer.phone,
+        customer_id=str(staff.id),
+        full_name=staff.full_name,
+        phone=staff.phone,
+        role=role,
     )

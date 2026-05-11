@@ -18,19 +18,25 @@ class AuthSession {
   final String customerId;
   final String fullName;
   final String phone;
+  /// 'customer' | 'cashier' | 'supervisor' | 'manager'
+  final String role;
 
   const AuthSession({
     required this.accessToken,
     required this.customerId,
     required this.fullName,
     required this.phone,
+    this.role = 'customer',
   });
+
+  bool get isStaff => role != 'customer';
 
   Map<String, dynamic> toJson() => {
         'accessToken': accessToken,
         'customerId': customerId,
         'fullName': fullName,
         'phone': phone,
+        'role': role,
       };
 
   factory AuthSession.fromJson(Map<String, dynamic> json) => AuthSession(
@@ -38,6 +44,7 @@ class AuthSession {
         customerId: json['customerId'] as String,
         fullName: json['fullName'] as String,
         phone: json['phone'] as String,
+        role: (json['role'] as String?) ?? 'customer',
       );
 }
 

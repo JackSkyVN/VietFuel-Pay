@@ -4,6 +4,7 @@ abstract class AppRoutes {
   static const String login = '/login';
   static const String register = '/register';
   static const String dashboard = '/dashboard';
+  static const String staffDashboard = '/staff-dashboard';
   static const String offlineQr = '/offline-qr';
   static const String payment = '/payment';
   static const String paymentSuccess = '/payment/success';
