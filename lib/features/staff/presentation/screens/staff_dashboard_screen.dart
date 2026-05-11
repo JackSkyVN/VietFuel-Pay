@@ -136,12 +136,15 @@ class StaffDashboardScreen extends ConsumerWidget {
           // ── Divider ─────────────────────────────────────────────────────────
           const _FlatDivider(),
 
-          // ── 3. Transaction feed header ───────────────────────────────────────
-          const _FeedHeader(),
+          // ── 3. Transaction feed header ────────────────────────────────────
+          _FeedHeader(isAggregate: shift.isAggregate),
 
-          // ── 4. Live feed ─────────────────────────────────────────────────────
+          // ── 4. Live feed ───────────────────────────────────────────
           Expanded(
-            child: _TransactionFeed(transactions: shift.transactions),
+            child: _TransactionFeed(
+              transactions: shift.transactions,
+              isAggregate: shift.isAggregate,
+            ),
           ),
         ],
       ),
@@ -313,7 +316,8 @@ class _PosActionButton extends StatelessWidget {
 // ── Feed Header ───────────────────────────────────────────────────────────────
 
 class _FeedHeader extends StatelessWidget {
-  const _FeedHeader();
+  final bool isAggregate;
+  const _FeedHeader({this.isAggregate = false});
 
   @override
   Widget build(BuildContext context) {
@@ -321,13 +325,17 @@ class _FeedHeader extends StatelessWidget {
       width: double.infinity,
       color: const Color(0xFFF5F5F5),
       padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
-      child: const Row(
+      child: Row(
         children: [
-          Icon(Icons.receipt_long_rounded, size: 16, color: AppColors.mediumGray),
-          SizedBox(width: 8),
+          Icon(
+            isAggregate ? Icons.people_rounded : Icons.receipt_long_rounded,
+            size: 16,
+            color: AppColors.mediumGray,
+          ),
+          const SizedBox(width: 8),
           Text(
-            'GIAO DỊCH HÔM NAY',
-            style: TextStyle(
+            isAggregate ? 'TẤT CẢ GIAO DỊCH HÔM NAY' : 'GIAO DỊCH HÔM NAY',
+            style: const TextStyle(
               color: AppColors.mediumGray,
               fontSize: 11,
               fontWeight: FontWeight.w700,
@@ -344,7 +352,8 @@ class _FeedHeader extends StatelessWidget {
 
 class _TransactionFeed extends StatelessWidget {
   final List<ShiftTransaction> transactions;
-  const _TransactionFeed({required this.transactions});
+  final bool isAggregate;
+  const _TransactionFeed({required this.transactions, this.isAggregate = false});
 
   @override
   Widget build(BuildContext context) {
@@ -361,19 +370,26 @@ class _TransactionFeed extends StatelessWidget {
       physics: const ClampingScrollPhysics(), // lightweight on POS
       itemCount: transactions.length,
       separatorBuilder: (context, _) => const _FlatDivider(),
-      itemBuilder: (_, i) => _TransactionTile(tx: transactions[i]),
+      itemBuilder: (_, i) => _TransactionTile(
+        tx: transactions[i],
+        showCashierName: isAggregate,
+      ),
     );
   }
 }
 
 class _TransactionTile extends StatelessWidget {
   final ShiftTransaction tx;
-  const _TransactionTile({required this.tx});
+  final bool showCashierName;
+  const _TransactionTile({required this.tx, this.showCashierName = false});
 
   @override
   Widget build(BuildContext context) {
+    final subtitle = showCashierName
+        ? '${tx.staffName}  ·  Vòi ${tx.pumpNumber}  ·  ${_timeFmt.format(tx.time)}'
+        : 'Vòi số ${tx.pumpNumber}  ·  ${_timeFmt.format(tx.time)}';
     return SizedBox(
-      height: 64, // consistent, chunky touch target height
+      height: 64,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Row(
@@ -416,7 +432,7 @@ class _TransactionTile extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    'Vòi số ${tx.pumpNumber}  ·  ${_timeFmt.format(tx.time)}',
+                    subtitle,
                     style: const TextStyle(
                       color: AppColors.mediumGray,
                       fontSize: 12,

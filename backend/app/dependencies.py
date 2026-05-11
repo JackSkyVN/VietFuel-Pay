@@ -1,53 +1,49 @@
 """
 FastAPI dependency injection helpers.
+
+Legacy shims are kept for backward compatibility with existing routers.
+New routers should import guards directly from app.core.rbac instead.
 """
 from __future__ import annotations
 
 import uuid
 from typing import Annotated
 
-from fastapi import Depends, Header, HTTPException, status
-from jose import JWTError
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import Depends
 
-from app.core.database import get_db
-from app.core.security import decode_access_token
-from app.core.exceptions import UnauthorizedException
+from app.core.rbac import (  # noqa: F401 – re-exported for convenience
+    AnyStaff,
+    AnyUser,
+    AuthenticatedUser,
+    CustomerOnly,
+    CustomerOrManager,
+    ManagerOnly,
+    SupervisorUp,
+    _extract_user,
+    require_roles,
+)
+from app.core.database import get_db  # noqa: F401 – re-exported
 
+
+# ── Legacy shims ──────────────────────────────────────────────────────────────
+# These keep existing routers (customer.py, admin.py) working without changes
+# while the codebase gradually adopts the new RBAC guards.
 
 async def get_current_customer_id(
-    authorization: Annotated[str | None, Header()] = None,
+    user: Annotated[AuthenticatedUser, Depends(require_roles(["customer", "manager"]))],
 ) -> uuid.UUID:
     """
-    FastAPI dependency – extracts and validates the customer JWT from the
-    Authorization header and returns the customer UUID.
+    Legacy dependency – returns the authenticated customer/manager UUID.
+    Migrated routes should switch to CustomerOnly or CustomerOrManager directly.
     """
-    if not authorization or not authorization.startswith("Bearer "):
-        raise UnauthorizedException("Missing or malformed Authorization header.")
-    token = authorization.split(" ", 1)[1]
-    try:
-        payload = decode_access_token(token)
-        customer_id = uuid.UUID(payload["sub"])
-    except (JWTError, KeyError, ValueError):
-        raise UnauthorizedException("Invalid or expired access token.")
-    return customer_id
+    return user.sub
 
 
 async def get_current_admin_id(
-    authorization: Annotated[str | None, Header()] = None,
+    user: Annotated[AuthenticatedUser, Depends(require_roles(["manager", "supervisor"]))],
 ) -> str:
     """
-    FastAPI dependency – validates an admin/staff JWT and returns the staff ID.
-    Expects the token payload to contain role='admin' or role='staff'.
+    Legacy dependency – returns the authenticated admin/supervisor UUID as str.
+    Migrated routes should switch to SupervisorUp or ManagerOnly directly.
     """
-    if not authorization or not authorization.startswith("Bearer "):
-        raise UnauthorizedException("Missing or malformed Authorization header.")
-    token = authorization.split(" ", 1)[1]
-    try:
-        payload = decode_access_token(token)
-        role = payload.get("role", "")
-        if role not in ("admin", "staff"):
-            raise UnauthorizedException("Insufficient privileges.")
-        return payload["sub"]
-    except (JWTError, KeyError):
-        raise UnauthorizedException("Invalid or expired access token.")
+    return str(user.sub)

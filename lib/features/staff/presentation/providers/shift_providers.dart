@@ -3,7 +3,10 @@
 /// Fetches the current shift summary from the real backend endpoint:
 ///   GET /api/v1/staff/shift/{staff_id}
 ///
-/// Falls back to a local empty state if the staff is not yet assigned a shift.
+/// Behaviour by role (enforced server-side):
+///   cashier     → sees only their own transactions
+///   supervisor  → sees ALL transactions from all cashiers today
+///   manager     → sees ALL transactions from all cashiers today
 library;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -15,6 +18,8 @@ import '../../../auth/presentation/providers/auth_providers.dart';
 
 class ShiftTransaction {
   final String id;
+  final String staffId;
+  final String staffName; // cashier's name — shown in aggregate views
   final String licensePlate;
   final int pumpNumber;
   final int amountVnd;
@@ -23,6 +28,8 @@ class ShiftTransaction {
 
   const ShiftTransaction({
     required this.id,
+    required this.staffId,
+    required this.staffName,
     required this.licensePlate,
     required this.pumpNumber,
     required this.amountVnd,
@@ -33,6 +40,8 @@ class ShiftTransaction {
   factory ShiftTransaction.fromJson(Map<String, dynamic> json) =>
       ShiftTransaction(
         id: json['id'] as String,
+        staffId: json['staff_id'] as String,
+        staffName: (json['staff_name'] as String?) ?? '—',
         licensePlate: json['license_plate'] as String,
         pumpNumber: json['pump_number'] as int,
         amountVnd: json['amount_vnd'] as int,
@@ -47,6 +56,7 @@ class ShiftSummary {
   final String role;
   final String shiftLabel;
   final int totalRevenueVnd;
+  final bool isAggregate; // true for supervisor/manager — spans all cashiers
   final List<ShiftTransaction> transactions;
 
   const ShiftSummary({
@@ -55,6 +65,7 @@ class ShiftSummary {
     required this.role,
     required this.shiftLabel,
     required this.totalRevenueVnd,
+    required this.isAggregate,
     required this.transactions,
   });
 
@@ -66,6 +77,7 @@ class ShiftSummary {
         role: json['role'] as String,
         shiftLabel: json['shift_label'] as String,
         totalRevenueVnd: json['total_revenue_vnd'] as int,
+        isAggregate: (json['is_aggregate'] as bool?) ?? false,
         transactions: (json['transactions'] as List)
             .map((t) => ShiftTransaction.fromJson(t as Map<String, dynamic>))
             .toList(),
@@ -75,7 +87,9 @@ class ShiftSummary {
 // ── Provider ──────────────────────────────────────────────────────────────────
 
 /// Fetches today's shift summary for the currently logged-in staff member.
-/// Automatically re-fetches when the auth session changes.
+/// The backend automatically returns:
+///   - Cashier   → own transactions only
+///   - Supervisor/Manager → ALL transactions across all cashiers
 final shiftSummaryProvider = FutureProvider<ShiftSummary>((ref) async {
   final session = ref.watch(currentSessionProvider);
   if (session == null || !session.isStaff) {

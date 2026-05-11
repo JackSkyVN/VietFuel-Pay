@@ -25,6 +25,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.core.rbac import AnyUser, CustomerOrManager
 from app.models import Customer, Transaction, TransactionStatus
 from app.schemas.transactions import (
     DemoPaymentRequest,
@@ -53,6 +54,7 @@ router = APIRouter(prefix="/transactions", tags=["Transactions – Smart Wallet 
 async def complete_demo_payment(
     transaction_id: uuid.UUID,
     payload: DemoPaymentRequest,
+    user: CustomerOrManager,      # ← RBAC: only customers or managers
     db: AsyncSession = Depends(get_db),
 ) -> PaymentResponse:
 
@@ -122,6 +124,7 @@ async def complete_demo_payment(
     ),
 )
 async def get_awaiting_payment(
+    user: AnyUser,               # ← RBAC: any authenticated user
     db: AsyncSession = Depends(get_db),
 ) -> PendingPaymentInfo | None:
     """
